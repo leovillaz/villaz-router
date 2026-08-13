@@ -85,3 +85,158 @@ class RouteDecision(BaseModel):
             )
 
         return self
+
+
+class EvidenceType(StrEnum):
+    TERM = "term"
+    PHRASE = "phrase"
+
+
+class EvidenceStrength(StrEnum):
+    STRONG = "strong"
+    MEDIUM = "medium"
+    WEAK = "weak"
+
+
+class Evidence(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    id: str
+    type: EvidenceType
+    strength: EvidenceStrength
+    value: str
+
+
+class Profile(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    id: str
+    enabled: bool
+
+
+class Domain(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    id: str
+    evidence: tuple[Evidence, ...]
+
+
+class Intent(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    id: str
+    route_capable: bool
+    evidence: tuple[Evidence, ...]
+
+
+class RouteCondition(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    intent: str | None = None
+    domain: str | None = None
+
+    @model_validator(mode="after")
+    def validate_condition(self) -> "RouteCondition":
+        if self.intent is None and self.domain is None:
+            raise ValueError(
+                "route condition requires intent, domain, or both"
+            )
+
+        return self
+
+
+class RouteResult(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    profile: str
+
+
+class Route(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    id: str
+    enabled: bool
+    priority: int
+    when: RouteCondition
+    result: RouteResult
+
+
+class ProfilesDocument(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    schema_version: str
+    ruleset_version: str
+    profiles: tuple[Profile, ...]
+
+
+class DomainsDocument(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    schema_version: str
+    ruleset_version: str
+    domains: tuple[Domain, ...]
+
+
+class IntentsDocument(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    schema_version: str
+    ruleset_version: str
+    intents: tuple[Intent, ...]
+
+
+class RoutingDocument(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    schema_version: str
+    ruleset_version: str
+    routes: tuple[Route, ...]
+
+
+class RulesetSnapshot(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    schema_version: str
+    ruleset_version: str
+    ruleset_hash: str
+
+    profiles: tuple[Profile, ...]
+    domains: tuple[Domain, ...]
+    intents: tuple[Intent, ...]
+    routes: tuple[Route, ...]

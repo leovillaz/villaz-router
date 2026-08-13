@@ -1,0 +1,14 @@
+schema_version: "1.0"
+ruleset_version: "1.0.0"
+
+profiles:
+  - id: mobile-dev
+    enabled: true
+  - id: unity-dev
+    enabled: true
+  - id: docs-dev
+    enabled: true
+  - id: fiscal-finance
+    enabled: true
+  - id: code-review-security
+    enabled: true
