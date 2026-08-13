@@ -3,6 +3,10 @@ from villaz_router.config import (
     RouterSettings,
 )
 from villaz_router.errors import RouterError, RouterErrorCode
+from villaz_router.loader import (
+    LoadedRulesetDocuments,
+    load_ruleset_documents,
+)
 from villaz_router.models import (
     Domain,
     DomainsDocument,
@@ -33,6 +37,7 @@ __all__ = [
     "EvidenceType",
     "Intent",
     "IntentsDocument",
+    "LoadedRulesetDocuments",
     "Profile",
     "ProfilesDocument",
     "Route",
@@ -49,4 +54,5 @@ __all__ = [
     "RoutingMode",
     "RoutingReason",
     "RulesetSnapshot",
+    "load_ruleset_documents",
 ]
