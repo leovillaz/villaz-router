@@ -98,3 +98,15 @@ def load_ruleset_documents(
             RoutingDocument,
         ),
     )
+
+
+def load_and_validate_ruleset_documents(
+    project_root: Path,
+) -> LoadedRulesetDocuments:
+    documents = load_ruleset_documents(project_root)
+
+    from villaz_router.validation import validate_ruleset_semantics
+
+    validate_ruleset_semantics(documents)
+
+    return documents

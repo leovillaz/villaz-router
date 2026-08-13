@@ -5,6 +5,7 @@ from villaz_router.config import (
 from villaz_router.errors import RouterError, RouterErrorCode
 from villaz_router.loader import (
     LoadedRulesetDocuments,
+    load_and_validate_ruleset_documents,
     load_ruleset_documents,
 )
 from villaz_router.models import (
@@ -28,6 +29,7 @@ from villaz_router.models import (
     RoutingReason,
     RulesetSnapshot,
 )
+from villaz_router.validation import validate_ruleset_semantics
 
 __all__ = [
     "Domain",
@@ -54,5 +56,7 @@ __all__ = [
     "RoutingMode",
     "RoutingReason",
     "RulesetSnapshot",
+    "load_and_validate_ruleset_documents",
     "load_ruleset_documents",
+    "validate_ruleset_semantics",
 ]

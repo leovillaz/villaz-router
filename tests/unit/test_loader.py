@@ -98,3 +98,13 @@ def test_non_mapping_document_is_invalid_ruleset(
         load_ruleset_documents(tmp_path)
 
     assert exc_info.value.code is RouterErrorCode.INVALID_RULESET
+
+
+def test_load_and_validate_official_ruleset() -> None:
+    from villaz_router.loader import (
+        load_and_validate_ruleset_documents,
+    )
+
+    loaded = load_and_validate_ruleset_documents(PROJECT_ROOT)
+
+    assert loaded.profiles.ruleset_version == "1.0.0"
