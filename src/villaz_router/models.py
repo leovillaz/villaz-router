@@ -2,6 +2,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from villaz_router.config import RouterSettings
+
 
 class RouteState(StrEnum):
     EXPLICIT = "explicit"
@@ -277,8 +279,11 @@ class RulesetSnapshot(BaseModel):
 
     schema_version: str
     ruleset_version: str
-    ruleset_hash: str
+    ruleset_hash: str = Field(
+        pattern=r"^[0-9a-f]{64}$"
+    )
 
+    router: RouterSettings
     profiles: tuple[Profile, ...]
     domains: tuple[Domain, ...]
     intents: tuple[Intent, ...]

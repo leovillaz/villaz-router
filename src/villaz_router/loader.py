@@ -12,6 +12,7 @@ from villaz_router.models import (
     IntentsDocument,
     ProfilesDocument,
     RoutingDocument,
+    RulesetSnapshot,
 )
 
 
@@ -110,3 +111,15 @@ def load_and_validate_ruleset_documents(
     validate_ruleset_semantics(documents)
 
     return documents
+
+
+def load_ruleset_snapshot(
+    project_root: Path,
+) -> RulesetSnapshot:
+    from villaz_router.canonical import create_ruleset_snapshot
+
+    documents = load_and_validate_ruleset_documents(
+        project_root
+    )
+
+    return create_ruleset_snapshot(documents)

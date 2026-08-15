@@ -29,10 +29,10 @@ Reconciliação entre a especificação consolidada e o repositório:
 ## Validação atual
 
 ```text
-52 passed
+66 passed
 ```
 
-A suíte atual comprova modelos, loader, validação semântica, invariantes e integridade da matriz. A execução comportamental dos 48 casos depende da implementação futura de normalização, matching, scoring e decisão.
+A suíte atual comprova modelos, loader, validação semântica, invariantes, integridade da matriz, canonicalização, identidade SHA-256 e criação determinística do `RulesetSnapshot`. A execução comportamental dos 48 casos depende da implementação futura de normalização, matching, scoring e decisão.
 
 Ruleset oficial:
 
@@ -44,14 +44,35 @@ routes: 5
 regression cases: 48
 ```
 
-## Próxima etapa
+## IMPLEMENTAÇÃO-001.05 — concluída
 
-### IMPLEMENTAÇÃO-001.05
+Implementado:
 
 - canonicalização semântica;
 - JSON determinístico UTF-8;
 - SHA-256 lógico;
-- criação de `RulesetSnapshot`.
+- `RulesetSnapshot`;
+- inclusão de `RouterSettings` no snapshot;
+- integração do snapshot ao loader;
+- independência da ordem física das coleções YAML;
+- validação de formato hexadecimal SHA-256.
+
+Hash lógico do ruleset oficial `1.0.0` neste checkpoint:
+
+```text
+ee57b50c8ff5f15476276610b6850c30509933e129a7a43062159348e0cbe575
+```
+
+Suíte atual:
+
+```text
+66 passed
+```
+
+## Próxima etapa
+
+- normalização de mensagens;
+- matching determinístico.
 
 ## Ainda não implementado
 

@@ -130,3 +130,43 @@ startup_only
 ```
 
 A instância usa um snapshot imutável durante toda a execução. Alterações em disco só entram em vigor após reinicialização controlada.
+
+## Identidade lógica do ruleset
+
+Após parsing e validação semântica, o control plane é convertido para uma representação lógica canônica.
+
+A identidade inclui:
+
+```text
+RouterSettings
++ Profiles
++ Domains
++ Intents
++ Routes
+```
+
+A ordem física dos YAMLs não participa da identidade. Profiles, domains, intents, routes e evidências são ordenados deterministicamente por `id`.
+
+O fluxo implementado é:
+
+```text
+YAML
+  ↓
+safe_load
+  ↓
+modelos Pydantic
+  ↓
+validação semântica
+  ↓
+payload canônico
+  ↓
+JSON determinístico UTF-8
+  ↓
+SHA-256
+  ↓
+RulesetSnapshot
+```
+
+O `RulesetSnapshot` congela configuração e ruleset para a vida útil da instância.
+
+> **Invariante de decisão:** a ordem canônica por `id` existe exclusivamente para representação, hash e snapshot. Ela não pode ser usada como precedência, desempate ou critério de seleção de rota.

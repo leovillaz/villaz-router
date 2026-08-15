@@ -8,9 +8,11 @@
 - [x] Validação semântica
 - [x] ROUTER-007 — reconciliação normativa e endurecimento de contratos
 - [x] RT-001–RT-048 versionados como contrato
-- [ ] Canonicalização
-- [ ] SHA-256 lógico
-- [ ] RulesetSnapshot
+- [x] Canonicalização
+- [x] JSON determinístico UTF-8
+- [x] SHA-256 lógico
+- [x] RulesetSnapshot
+- [x] Snapshot integrado ao loader
 
 ## Fase 2 — Classificação
 

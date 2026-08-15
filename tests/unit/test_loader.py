@@ -108,3 +108,25 @@ def test_load_and_validate_official_ruleset() -> None:
     loaded = load_and_validate_ruleset_documents(PROJECT_ROOT)
 
     assert loaded.profiles.ruleset_version == "1.0.0"
+
+
+def test_load_ruleset_snapshot() -> None:
+    from villaz_router.loader import load_ruleset_snapshot
+
+    snapshot = load_ruleset_snapshot(PROJECT_ROOT)
+
+    assert snapshot.schema_version == "1.0"
+    assert snapshot.ruleset_version == "1.0.0"
+    assert len(snapshot.ruleset_hash) == 64
+    assert snapshot.router.scoring.strong == 10
+    assert snapshot.router.lifecycle.ruleset_reload == "startup_only"
+
+
+def test_loaded_snapshot_is_stable_between_loads() -> None:
+    from villaz_router.loader import load_ruleset_snapshot
+
+    first = load_ruleset_snapshot(PROJECT_ROOT)
+    second = load_ruleset_snapshot(PROJECT_ROOT)
+
+    assert first == second
+    assert first.ruleset_hash == second.ruleset_hash

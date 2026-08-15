@@ -8,7 +8,7 @@ python -m pytest -v
 
 ## Estado atual
 
-A suíte documentada possui **52 testes**.
+A suíte documentada possui **66 testes**.
 
 Cobertura atual:
 
@@ -25,7 +25,16 @@ Cobertura atual:
 - `minimum_score` superior a uma evidência `strong` aceito;
 - normalização accent-insensitive na validação de duplicatas;
 - associação da rota de segurança ao intent `review-security`;
-- integridade do contrato RT-001–RT-048.
+- integridade do contrato RT-001–RT-048;
+- canonicalização determinística do ruleset;
+- independência da ordem física de profiles, domains, intents, routes e evidências;
+- serialização compacta em JSON UTF-8;
+- mudanças semânticas alterando o hash;
+- reordenação física preservando o hash;
+- formato SHA-256 hexadecimal minúsculo;
+- criação e estabilidade do `RulesetSnapshot`;
+- inclusão das configurações do Router no snapshot;
+- integração do snapshot ao loader.
 
 ## Matriz normativa
 

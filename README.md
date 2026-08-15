@@ -31,15 +31,18 @@ Implementado e testado:
 - separação normativa Domain × Intent para Security / Code Review;
 - rota `code-review-security` condicionada ao intent `review-security`;
 - matriz normativa RT-001–RT-048 em `tests/regression`;
-- suíte atual com 52 testes.
+- canonicalização semântica independente da ordem física do YAML;
+- JSON determinístico UTF-8;
+- hash lógico SHA-256;
+- `RulesetSnapshot` imutável integrado ao loader;
+- suíte atual com 66 testes.
 
 Próxima etapa planejada:
 
-- canonicalização determinística;
-- hash lógico SHA-256;
-- `RulesetSnapshot`.
+- normalização de mensagens;
+- matching determinístico.
 
-Depois virão normalização, matching, scoring, execução comportamental de RT-001–RT-048 e algoritmo final de decisão. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
+Depois virão scoring, execução comportamental de RT-001–RT-048 e algoritmo final de decisão. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
 
 ## Requisitos
 
@@ -105,11 +108,13 @@ validação estrutural
   ↓
 validação semântica
   ↓
-[próximo] canonicalização
+canonicalização semântica
   ↓
-[próximo] SHA-256
+JSON determinístico UTF-8
   ↓
-[próximo] snapshot imutável
+SHA-256 lógico
+  ↓
+RulesetSnapshot imutável
   ↓
 Router
 ```

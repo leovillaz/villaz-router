@@ -1,3 +1,10 @@
+from villaz_router.canonical import (
+    canonical_ruleset_bytes,
+    canonical_ruleset_json,
+    canonical_ruleset_payload,
+    compute_ruleset_hash,
+    create_ruleset_snapshot,
+)
 from villaz_router.config import (
     RouterConfigDocument,
     RouterSettings,
@@ -7,6 +14,7 @@ from villaz_router.loader import (
     LoadedRulesetDocuments,
     load_and_validate_ruleset_documents,
     load_ruleset_documents,
+    load_ruleset_snapshot,
 )
 from villaz_router.models import (
     Domain,
@@ -32,6 +40,11 @@ from villaz_router.models import (
 from villaz_router.validation import validate_ruleset_semantics
 
 __all__ = [
+    "canonical_ruleset_bytes",
+    "canonical_ruleset_json",
+    "canonical_ruleset_payload",
+    "compute_ruleset_hash",
+    "create_ruleset_snapshot",
     "Domain",
     "DomainsDocument",
     "Evidence",
@@ -58,5 +71,6 @@ __all__ = [
     "RulesetSnapshot",
     "load_and_validate_ruleset_documents",
     "load_ruleset_documents",
+    "load_ruleset_snapshot",
     "validate_ruleset_semantics",
 ]

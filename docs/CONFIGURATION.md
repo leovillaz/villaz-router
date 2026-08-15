@@ -77,4 +77,26 @@ Não há hot reload no Router v1.
 
 ## Integridade
 
-O formato aprovado para identidade lógica é SHA-256 sobre representação canônica em JSON determinístico UTF-8. A implementação dessa etapa é a próxima fase do projeto.
+A identidade lógica do ruleset está implementada como SHA-256 sobre representação canônica em JSON determinístico UTF-8.
+
+A canonicalização inclui:
+
+- configuração efetiva do Router;
+- profiles;
+- domains;
+- intents;
+- routes.
+
+Coleções semanticamente não ordenadas são ordenadas por `id` antes da serialização. Evidências também são ordenadas por `id` dentro de cada domain ou intent.
+
+Portanto, mudanças de comentários, espaçamento, formatação ou ordem física dos itens nos YAMLs não alteram o hash lógico. Mudanças semânticas alteram o hash.
+
+O JSON canônico usa:
+
+- UTF-8;
+- chaves ordenadas;
+- separadores compactos;
+- caracteres Unicode preservados;
+- rejeição de valores numéricos não JSON como `NaN`.
+
+O `RulesetSnapshot` inclui o hash lógico, a configuração efetiva do Router e todas as estruturas do ruleset em ordem canônica.
