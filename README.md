@@ -2,7 +2,7 @@
 
 Router determinístico, declarativo e auditável para seleção de perfis especializados no projeto **Villaz-Lab**.
 
-> **Status:** implementação em andamento. O bootstrap do ruleset está implementado até validação semântica; o algoritmo completo de decisão ainda não foi concluído.
+> **Status:** bootstrap do ruleset validado e reconciliado no checkpoint ROUTER-007. A matriz RT-001–RT-048 está versionada como contrato; o algoritmo completo de decisão ainda não foi implementado.
 
 ## Objetivos
 
@@ -21,12 +21,17 @@ O Villaz Router foi desenhado para:
 Implementado e testado:
 
 - contratos `RouteRequest`, `RouteDecision` e erros internos;
+- coerência entre estado, modo, razão, candidatos e conflito;
 - modelos formais de configuração e ruleset;
 - loader seguro de YAML;
 - validação estrutural com Pydantic;
 - validação semântica e de referências cruzadas;
+- validação de IDs, versões, scoring e profiles desabilitados;
 - ruleset oficial v1;
-- suíte de testes unitários.
+- separação normativa Domain × Intent para Security / Code Review;
+- rota `code-review-security` condicionada ao intent `review-security`;
+- matriz normativa RT-001–RT-048 em `tests/regression`;
+- suíte atual com 52 testes.
 
 Próxima etapa planejada:
 
@@ -34,7 +39,7 @@ Próxima etapa planejada:
 - hash lógico SHA-256;
 - `RulesetSnapshot`.
 
-Depois virão normalização, matching, scoring e algoritmo final de decisão.
+Depois virão normalização, matching, scoring, execução comportamental de RT-001–RT-048 e algoritmo final de decisão. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
 
 ## Requisitos
 

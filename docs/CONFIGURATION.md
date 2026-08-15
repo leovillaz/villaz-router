@@ -59,6 +59,10 @@ router:
 
 `minimum_score = 10`
 
+`minimum_score` é um threshold agregado de elegibilidade. Ele pode ser configurado com valor superior ao peso de uma única evidência `strong`, permitindo exigir corroboração por múltiplas evidências.
+
+A relação obrigatória entre os pesos é `strong > medium > weak`.
+
 Evidências exclusivamente `weak` não podem tornar um candidato elegível, mesmo se a soma atingir o threshold.
 
 ## Ambiguidade

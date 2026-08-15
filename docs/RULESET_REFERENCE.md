@@ -115,6 +115,14 @@ O ruleset é rejeitado quando houver, entre outros:
 - route apontando para domain inexistente;
 - route apontando para intent inexistente;
 - route usando intent com `route_capable: false`;
+- rota habilitada apontando para profile desabilitado;
+- ID fora do formato aceito;
+- `schema_version` ou `ruleset_version` malformada;
+- scoring que não preserve `strong > medium > weak`;
+
+Prioridades iguais entre rotas habilitadas são válidas. `priority` representa precedência, não identidade; empates devem ser tratados deterministicamente pelo algoritmo, sem usar a ordem física do YAML.
+
+`minimum_score` é um threshold agregado e pode ser maior que o peso de uma única evidência `strong`.
 - `profile.id` usado como evidence;
 - evidence vazia;
-- evidence normalizada duplicada no mesmo alvo.
+- evidence normalizada duplicada no mesmo alvo, incluindo equivalência por accent folding.

@@ -63,6 +63,12 @@ Catálogo de perfis válidos.
 
 Classificação técnica baseada em evidências.
 
+No ruleset v1, o domínio `security` representa o assunto técnico de segurança e não seleciona isoladamente o profile `code-review-security`.
+
+A seleção desse profile depende do intent route-capable `review-security`. Evidências que descrevem a ação de revisar, auditar ou procurar vulnerabilidades pertencem ao intent; evidências que descrevem o assunto de segurança pertencem ao domínio.
+
+A associação final a profile continua sendo normativa somente em `routing.yaml`.
+
 ### Intents
 
 `rules/intents.yaml`

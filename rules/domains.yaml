@@ -24,6 +24,22 @@ domains:
         type: term
         strength: strong
         value: "swiftui"
+      - id: DOMAIN-MOBILE-006
+        type: term
+        strength: strong
+        value: "futurebuilder"
+      - id: DOMAIN-MOBILE-007
+        type: term
+        strength: strong
+        value: "kotlin"
+      - id: DOMAIN-MOBILE-008
+        type: term
+        strength: strong
+        value: "firebase"
+      - id: DOMAIN-MOBILE-009
+        type: term
+        strength: strong
+        value: "dart"
 
   - id: unity
     evidence:
@@ -47,6 +63,26 @@ domains:
         type: term
         strength: medium
         value: "scene"
+      - id: DOMAIN-UNITY-006
+        type: term
+        strength: strong
+        value: "fixedupdate"
+      - id: DOMAIN-UNITY-007
+        type: term
+        strength: strong
+        value: "getcomponent"
+      - id: DOMAIN-UNITY-008
+        type: term
+        strength: strong
+        value: "prefab"
+      - id: DOMAIN-UNITY-009
+        type: term
+        strength: strong
+        value: "animator"
+      - id: DOMAIN-UNITY-010
+        type: term
+        strength: strong
+        value: "collider"
 
   - id: fiscal
     evidence:
@@ -74,6 +110,18 @@ domains:
         type: term
         strength: medium
         value: "fiscal"
+      - id: DOMAIN-FISCAL-007
+        type: term
+        strength: strong
+        value: "tributação"
+      - id: DOMAIN-FISCAL-008
+        type: phrase
+        strength: strong
+        value: "nf-e"
+      - id: DOMAIN-FISCAL-009
+        type: term
+        strength: strong
+        value: "cst"
 
   - id: security
     evidence:

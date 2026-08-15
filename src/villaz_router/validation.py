@@ -1,8 +1,19 @@
 from collections.abc import Iterable
+import re
+import unicodedata
 
 from villaz_router.errors import RouterError, RouterErrorCode
 from villaz_router.loader import LoadedRulesetDocuments
 from villaz_router.models import Domain, Evidence, Intent
+
+
+_IDENTIFIER_PATTERN = re.compile(
+    r"^[A-Za-z0-9][A-Za-z0-9._-]*$"
+)
+_SCHEMA_VERSION_PATTERN = re.compile(r"^[0-9]+[.][0-9]+$")
+_RULESET_VERSION_PATTERN = re.compile(
+    r"^[0-9]+[.][0-9]+[.][0-9]+$"
+)
 
 
 def _invalid(message: str) -> RouterError:
@@ -30,6 +41,20 @@ def _require_unique_ids(
         seen.add(item_id)
 
 
+def _validate_identifiers(
+    items: Iterable[object],
+    *,
+    label: str,
+) -> None:
+    for item in items:
+        item_id = getattr(item, "id")
+
+        if not _IDENTIFIER_PATTERN.fullmatch(item_id):
+            raise _invalid(
+                f"invalid {label} id: {item_id!r}"
+            )
+
+
 def _validate_versions(
     documents: LoadedRulesetDocuments,
 ) -> None:
@@ -47,12 +72,12 @@ def _validate_versions(
 
     ruleset_version = next(iter(versions))
 
-    try:
-        major_version = int(ruleset_version.split(".", 1)[0])
-    except (ValueError, IndexError) as exc:
+    if not _RULESET_VERSION_PATTERN.fullmatch(ruleset_version):
         raise _invalid(
             f"invalid ruleset_version: {ruleset_version}"
-        ) from exc
+        )
+
+    major_version = int(ruleset_version.split(".", 1)[0])
 
     expected_major = (
         documents.config.router.engine.expected_major_version
@@ -78,6 +103,24 @@ def _validate_schema_versions(
     if len(schema_versions) != 1:
         raise _invalid(
             "schema_version mismatch between ruleset documents"
+        )
+
+    schema_version = next(iter(schema_versions))
+
+    if not _SCHEMA_VERSION_PATTERN.fullmatch(schema_version):
+        raise _invalid(
+            f"invalid schema_version: {schema_version}"
+        )
+
+
+def _validate_router_config(
+    documents: LoadedRulesetDocuments,
+) -> None:
+    scoring = documents.config.router.scoring
+
+    if not (scoring.strong > scoring.medium > scoring.weak):
+        raise _invalid(
+            "scoring must satisfy strong > medium > weak"
         )
 
 
@@ -142,9 +185,19 @@ def _validate_duplicate_evidence_values_per_target(
         seen: set[str] = set()
 
         for evidence in evidence_items:
-            normalized = " ".join(
-                evidence.value.casefold().split()
+            normalized = unicodedata.normalize(
+                "NFKD",
+                unicodedata.normalize(
+                    "NFKC",
+                    evidence.value,
+                ).casefold(),
             )
+            normalized = "".join(
+                char
+                for char in normalized
+                if not unicodedata.combining(char)
+            )
+            normalized = " ".join(normalized.split())
 
             if normalized in seen:
                 raise _invalid(
@@ -193,6 +246,11 @@ def _validate_routes(
                 f"route references unknown profile: {route.id}"
             )
 
+        if route.enabled and not profile.enabled:
+            raise _invalid(
+                f"enabled route references disabled profile: {route.id}"
+            )
+
         if route.when.domain is not None:
             if route.when.domain not in domains:
                 raise _invalid(
@@ -219,8 +277,13 @@ def validate_ruleset_semantics(
 ) -> None:
     _validate_schema_versions(documents)
     _validate_versions(documents)
+    _validate_router_config(documents)
 
     _require_unique_ids(
+        documents.profiles.profiles,
+        label="profile",
+    )
+    _validate_identifiers(
         documents.profiles.profiles,
         label="profile",
     )
@@ -229,13 +292,25 @@ def validate_ruleset_semantics(
         documents.domains.domains,
         label="domain",
     )
+    _validate_identifiers(
+        documents.domains.domains,
+        label="domain",
+    )
 
     _require_unique_ids(
         documents.intents.intents,
         label="intent",
     )
+    _validate_identifiers(
+        documents.intents.intents,
+        label="intent",
+    )
 
     _require_unique_ids(
+        documents.routing.routes,
+        label="route",
+    )
+    _validate_identifiers(
         documents.routing.routes,
         label="route",
     )

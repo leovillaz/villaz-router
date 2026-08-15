@@ -288,3 +288,178 @@ def test_duplicate_normalized_evidence_value_in_same_target_is_invalid() -> None
 
     with pytest.raises(RouterError):
         validate_ruleset_semantics(invalid)
+
+
+def test_security_route_uses_review_security_intent() -> None:
+    documents = _official()
+
+    route = next(
+        item
+        for item in documents.routing.routes
+        if item.id == "ROUTE-REVIEW-001"
+    )
+
+    assert route.when.intent == "review-security"
+    assert route.when.domain is None
+    assert route.result.profile == "code-review-security"
+
+
+def test_enabled_route_to_disabled_profile_is_invalid() -> None:
+    documents = _official()
+
+    profiles = tuple(
+        profile.model_copy(update={"enabled": False})
+        if profile.id == "code-review-security"
+        else profile
+        for profile in documents.profiles.profiles
+    )
+
+    invalid = documents.__class__(
+        config=documents.config,
+        profiles=ProfilesDocument(
+            schema_version="1.0",
+            ruleset_version="1.0.0",
+            profiles=profiles,
+        ),
+        domains=documents.domains,
+        intents=documents.intents,
+        routing=documents.routing,
+    )
+
+    with pytest.raises(RouterError):
+        validate_ruleset_semantics(invalid)
+
+
+def test_duplicate_enabled_route_priority_is_valid() -> None:
+    documents = _official()
+
+    duplicate = documents.routing.routes[0].model_copy(
+        update={"id": "ROUTE-DUPLICATE-PRIORITY"}
+    )
+
+    valid = documents.__class__(
+        config=documents.config,
+        profiles=documents.profiles,
+        domains=documents.domains,
+        intents=documents.intents,
+        routing=RoutingDocument(
+            schema_version="1.0",
+            ruleset_version="1.0.0",
+            routes=documents.routing.routes + (duplicate,),
+        ),
+    )
+
+    validate_ruleset_semantics(valid)
+
+
+def test_invalid_identifier_is_rejected() -> None:
+    documents = _official()
+
+    invalid = documents.__class__(
+        config=documents.config,
+        profiles=ProfilesDocument(
+            schema_version="1.0",
+            ruleset_version="1.0.0",
+            profiles=(
+                Profile(id=" invalid-profile", enabled=True),
+            ),
+        ),
+        domains=documents.domains,
+        intents=documents.intents,
+        routing=documents.routing,
+    )
+
+    with pytest.raises(RouterError):
+        validate_ruleset_semantics(invalid)
+
+
+def test_accent_folded_duplicate_evidence_is_invalid() -> None:
+    documents = _official()
+
+    fiscal = next(
+        domain
+        for domain in documents.domains.domains
+        if domain.id == "fiscal"
+    )
+
+    duplicate = Evidence(
+        id="DOMAIN-FISCAL-999",
+        type="term",
+        strength="strong",
+        value="tributacao",
+    )
+
+    changed = fiscal.model_copy(
+        update={"evidence": fiscal.evidence + (duplicate,)}
+    )
+
+    domains = tuple(
+        changed if domain.id == "fiscal" else domain
+        for domain in documents.domains.domains
+    )
+
+    invalid = documents.__class__(
+        config=documents.config,
+        profiles=documents.profiles,
+        domains=DomainsDocument(
+            schema_version="1.0",
+            ruleset_version="1.0.0",
+            domains=domains,
+        ),
+        intents=documents.intents,
+        routing=documents.routing,
+    )
+
+    with pytest.raises(RouterError):
+        validate_ruleset_semantics(invalid)
+
+
+def test_minimum_score_may_exceed_strong_evidence_score() -> None:
+    documents = _official()
+
+    scoring = documents.config.router.scoring
+
+    eligibility = documents.config.router.eligibility.model_copy(
+        update={"minimum_score": scoring.strong + 5}
+    )
+    router = documents.config.router.model_copy(
+        update={"eligibility": eligibility}
+    )
+    config = documents.config.model_copy(
+        update={"router": router}
+    )
+
+    valid = documents.__class__(
+        config=config,
+        profiles=documents.profiles,
+        domains=documents.domains,
+        intents=documents.intents,
+        routing=documents.routing,
+    )
+
+    validate_ruleset_semantics(valid)
+
+
+def test_invalid_scoring_order_is_rejected() -> None:
+    documents = _official()
+
+    scoring = documents.config.router.scoring.model_copy(
+        update={"strong": 1, "medium": 4, "weak": 1}
+    )
+    router = documents.config.router.model_copy(
+        update={"scoring": scoring}
+    )
+    config = documents.config.model_copy(
+        update={"router": router}
+    )
+
+    invalid = documents.__class__(
+        config=config,
+        profiles=documents.profiles,
+        domains=documents.domains,
+        intents=documents.intents,
+        routing=documents.routing,
+    )
+
+    with pytest.raises(RouterError):
+        validate_ruleset_semantics(invalid)

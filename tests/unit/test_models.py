@@ -104,3 +104,46 @@ def test_candidates_cannot_have_duplicates() -> None:
             reason=RoutingReason.AMBIGUOUS_ROUTE,
             candidates=("docs-dev", "docs-dev"),
         )
+
+
+def test_explicit_requires_user_selected_reason() -> None:
+    with pytest.raises(ValidationError):
+        RouteDecision(
+            state=RouteState.EXPLICIT,
+            profile="unity-dev",
+            mode=RoutingMode.MANUAL,
+            reason=RoutingReason.UNITY_DETECTED,
+        )
+
+
+def test_routed_rejects_uncertain_reason() -> None:
+    with pytest.raises(ValidationError):
+        RouteDecision(
+            state=RouteState.ROUTED,
+            profile="mobile-dev",
+            mode=RoutingMode.AUTO,
+            reason=RoutingReason.AMBIGUOUS_ROUTE,
+        )
+
+
+def test_successful_decision_rejects_candidates() -> None:
+    with pytest.raises(ValidationError):
+        RouteDecision(
+            state=RouteState.ROUTED,
+            profile="mobile-dev",
+            mode=RoutingMode.AUTO,
+            reason=RoutingReason.MOBILE_DETECTED,
+            candidates=("unity-dev",),
+        )
+
+
+def test_non_routed_decision_rejects_resolved_conflict() -> None:
+    with pytest.raises(ValidationError):
+        RouteDecision(
+            state=RouteState.AMBIGUOUS,
+            profile=None,
+            mode=RoutingMode.AUTO,
+            reason=RoutingReason.AMBIGUOUS_ROUTE,
+            conflict_resolved=True,
+            candidates=("docs-dev", "mobile-dev"),
+        )

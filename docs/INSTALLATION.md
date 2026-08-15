@@ -56,7 +56,7 @@ pip install -e ".[dev]"
 pytest -v
 ```
 
-No estágio documentado deste projeto, a suíte inicial contém 37 testes.
+No estágio documentado deste projeto, a suíte atual contém 52 testes.
 
 ## 6. Carregar e validar o ruleset
 

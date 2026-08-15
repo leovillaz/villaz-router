@@ -6,6 +6,8 @@
 - [x] Modelos do ruleset
 - [x] Loader estrutural
 - [x] Validação semântica
+- [x] ROUTER-007 — reconciliação normativa e endurecimento de contratos
+- [x] RT-001–RT-048 versionados como contrato
 - [ ] Canonicalização
 - [ ] SHA-256 lógico
 - [ ] RulesetSnapshot
@@ -31,17 +33,22 @@
 - [ ] margin
 - [ ] ambiguous/unrouted
 - [ ] manual explicit profile
+- [ ] executar comportamentalmente RT-001–RT-048
+- [ ] repetir RT-045–RT-048 dez vezes
 
 ## Fase 4 — Integrações
 
-Somente após o Router isolado estar validado:
+Somente após o Router isolado e a matriz comportamental estarem validados:
 
 - [ ] Dispatcher / Profile Registry
 - [ ] FastAPI
-- [ ] Ollama
+- [ ] integração com Ollama
+- [ ] validar o fluxo API → Router → Dispatcher/Profile Registry → Ollama
 
 ## Fase futura
 
 - Orchestrator para workflows multi-perfil;
+- Base Fiscal + RAG;
+- Villaz Code após o gate do fluxo vertical;
 - hot reload versionado, se houver necessidade real;
 - observabilidade ampliada.

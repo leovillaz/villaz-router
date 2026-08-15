@@ -17,6 +17,18 @@ intents:
         type: phrase
         strength: strong
         value: "crie um readme"
+      - id: INTENT-DOC-004
+        type: phrase
+        strength: strong
+        value: "em markdown"
+      - id: INTENT-DOC-005
+        type: phrase
+        strength: strong
+        value: "procedimento de instalação"
+      - id: INTENT-DOC-006
+        type: phrase
+        strength: strong
+        value: "especificação técnica"
 
   - id: review-security
     route_capable: true
@@ -37,6 +49,26 @@ intents:
         type: term
         strength: strong
         value: "audite"
+      - id: INTENT-REVIEW-005
+        type: phrase
+        strength: strong
+        value: "analise a segurança"
+      - id: INTENT-REVIEW-006
+        type: phrase
+        strength: strong
+        value: "revise a segurança"
+      - id: INTENT-REVIEW-007
+        type: phrase
+        strength: strong
+        value: "procurando vulnerabilidades"
+      - id: INTENT-REVIEW-008
+        type: phrase
+        strength: strong
+        value: "existe sql injection"
+      - id: INTENT-REVIEW-009
+        type: phrase
+        strength: strong
+        value: "pode vazar dados pessoais"
 
   - id: development
     route_capable: false
