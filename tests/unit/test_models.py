@@ -2,6 +2,8 @@ import pytest
 from pydantic import ValidationError
 
 from villaz_router.models import (
+    EvidenceMatch,
+    EvidenceType,
     RouteDecision,
     RouteRequest,
     RouteState,
@@ -146,4 +148,104 @@ def test_non_routed_decision_rejects_resolved_conflict() -> None:
             reason=RoutingReason.AMBIGUOUS_ROUTE,
             conflict_resolved=True,
             candidates=("docs-dev", "mobile-dev"),
+        )
+
+
+
+def test_evidence_match_accepts_valid_contract() -> None:
+    match = EvidenceMatch(
+        evidence_id="DOMAIN-MOBILE-001",
+        evidence_type=EvidenceType.TERM,
+        evidence_value="flutter",
+        start=10,
+        end=17,
+    )
+
+    assert match.evidence_id == "DOMAIN-MOBILE-001"
+    assert match.evidence_type is EvidenceType.TERM
+    assert match.evidence_value == "flutter"
+    assert match.start == 10
+    assert match.end == 17
+
+
+def test_evidence_match_rejects_unknown_field() -> None:
+    with pytest.raises(ValidationError):
+        EvidenceMatch(
+            evidence_id="E-001",
+            evidence_type="term",
+            evidence_value="flutter",
+            start=0,
+            end=7,
+            unknown_field="invalid",
+        )
+
+
+def test_evidence_match_is_immutable() -> None:
+    match = EvidenceMatch(
+        evidence_id="E-001",
+        evidence_type="term",
+        evidence_value="flutter",
+        start=0,
+        end=7,
+    )
+
+    with pytest.raises(ValidationError):
+        match.start = 1
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("evidence_id", ""),
+        ("evidence_value", ""),
+    ),
+)
+def test_evidence_match_rejects_empty_identity_fields(
+    field: str,
+    value: str,
+) -> None:
+    payload = {
+        "evidence_id": "E-001",
+        "evidence_type": "term",
+        "evidence_value": "flutter",
+        "start": 0,
+        "end": 7,
+    }
+    payload[field] = value
+
+    with pytest.raises(ValidationError):
+        EvidenceMatch(**payload)
+
+
+def test_evidence_match_rejects_negative_start() -> None:
+    with pytest.raises(ValidationError):
+        EvidenceMatch(
+            evidence_id="E-001",
+            evidence_type="term",
+            evidence_value="flutter",
+            start=-1,
+            end=7,
+        )
+
+
+@pytest.mark.parametrize("end", (0, 4))
+def test_evidence_match_requires_end_greater_than_start(end: int) -> None:
+    with pytest.raises(ValidationError):
+        EvidenceMatch(
+            evidence_id="E-001",
+            evidence_type="term",
+            evidence_value="flutter",
+            start=4,
+            end=end,
+        )
+
+
+def test_evidence_match_rejects_unknown_type() -> None:
+    with pytest.raises(ValidationError):
+        EvidenceMatch(
+            evidence_id="E-001",
+            evidence_type="regex",
+            evidence_value="flutter",
+            start=0,
+            end=7,
         )

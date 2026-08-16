@@ -29,10 +29,10 @@ Reconciliação entre a especificação consolidada e o repositório:
 ## Validação atual
 
 ```text
-66 passed
+97 passed
 ```
 
-A suíte atual comprova modelos, loader, validação semântica, invariantes, integridade da matriz, canonicalização, identidade SHA-256 e criação determinística do `RulesetSnapshot`. A execução comportamental dos 48 casos depende da implementação futura de normalização, matching, scoring e decisão.
+A suíte atual comprova modelos, loader, validação semântica, invariantes, integridade da matriz, canonicalização, identidade SHA-256, criação determinística do `RulesetSnapshot`, normalização de texto e matching determinístico de evidências. A execução comportamental dos 48 casos depende agora da implementação de scoring e decisão.
 
 Ruleset oficial:
 
@@ -69,15 +69,33 @@ Suíte atual:
 66 passed
 ```
 
+## IMPLEMENTAÇÃO-001.06 — concluída tecnicamente
+
+Implementado:
+
+- normalização determinística com NFKC, `casefold()`, remoção de diacríticos e colapso de whitespace;
+- preservação de pontuação;
+- `EvidenceMatch` Pydantic congelado e estrito;
+- matching de `phrase` por substring literal contínua;
+- matching de `term` com fronteiras formais Unicode/número/`_`;
+- primeira ocorrência válida por evidência;
+- matching agregado imutável ordenado por `evidence_id`;
+- normalização simétrica de mensagem e `evidence.value`;
+- rejeição semântica fail-fast de evidência que normalize para vazio;
+- APIs públicas `normalize_text`, `match_evidence`, `match_evidence_set` e `EvidenceMatch`.
+
+Suíte vigente ao fechamento técnico:
+
+```text
+97 passed
+```
+
 ## Próxima etapa
 
-- normalização de mensagens;
-- matching determinístico.
+- scoring determinístico em runtime.
 
 ## Ainda não implementado
 
-- normalização de mensagens;
-- matching;
 - scoring em runtime;
 - algoritmo de decisão;
 - execução comportamental de RT-001–RT-048;

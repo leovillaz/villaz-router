@@ -155,6 +155,27 @@ class Evidence(BaseModel):
     value: str
 
 
+
+class EvidenceMatch(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    evidence_id: str = Field(min_length=1)
+    evidence_type: EvidenceType
+    evidence_value: str = Field(min_length=1)
+    start: int = Field(ge=0)
+    end: int
+
+    @model_validator(mode="after")
+    def validate_span(self) -> "EvidenceMatch":
+        if self.end <= self.start:
+            raise ValueError("end must be greater than start")
+
+        return self
+
+
 class Profile(BaseModel):
     model_config = ConfigDict(
         extra="forbid",

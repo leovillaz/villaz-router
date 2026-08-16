@@ -1,10 +1,10 @@
 from collections.abc import Iterable
 import re
-import unicodedata
 
 from villaz_router.errors import RouterError, RouterErrorCode
 from villaz_router.loader import LoadedRulesetDocuments
 from villaz_router.models import Domain, Evidence, Intent
+from villaz_router.normalization import normalize_text
 
 
 _IDENTIFIER_PATTERN = re.compile(
@@ -156,9 +156,9 @@ def _validate_evidence(
     }
 
     for evidence in all_evidence:
-        if not evidence.value.strip():
+        if not normalize_text(evidence.value):
             raise _invalid(
-                f"evidence value cannot be empty: {evidence.id}"
+                f"evidence value cannot normalize to empty: {evidence.id}"
             )
 
         normalized_value = evidence.value.strip().casefold()
@@ -185,19 +185,7 @@ def _validate_duplicate_evidence_values_per_target(
         seen: set[str] = set()
 
         for evidence in evidence_items:
-            normalized = unicodedata.normalize(
-                "NFKD",
-                unicodedata.normalize(
-                    "NFKC",
-                    evidence.value,
-                ).casefold(),
-            )
-            normalized = "".join(
-                char
-                for char in normalized
-                if not unicodedata.combining(char)
-            )
-            normalized = " ".join(normalized.split())
+            normalized = normalize_text(evidence.value)
 
             if normalized in seen:
                 raise _invalid(

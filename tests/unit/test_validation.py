@@ -463,3 +463,45 @@ def test_invalid_scoring_order_is_rejected() -> None:
 
     with pytest.raises(RouterError):
         validate_ruleset_semantics(invalid)
+
+
+
+def test_evidence_that_normalizes_to_empty_is_invalid() -> None:
+    documents = _official()
+
+    mobile = next(
+        domain
+        for domain in documents.domains.domains
+        if domain.id == "mobile"
+    )
+
+    invalid_evidence = Evidence(
+        id="DOMAIN-MOBILE-999",
+        type="term",
+        strength="strong",
+        value="\u0301",
+    )
+
+    changed = mobile.model_copy(
+        update={"evidence": mobile.evidence + (invalid_evidence,)}
+    )
+
+    domains = tuple(
+        changed if domain.id == "mobile" else domain
+        for domain in documents.domains.domains
+    )
+
+    invalid = documents.__class__(
+        config=documents.config,
+        profiles=documents.profiles,
+        domains=DomainsDocument(
+            schema_version="1.0",
+            ruleset_version="1.0.0",
+            domains=domains,
+        ),
+        intents=documents.intents,
+        routing=documents.routing,
+    )
+
+    with pytest.raises(RouterError):
+        validate_ruleset_semantics(invalid)

@@ -30,8 +30,10 @@ No estágio atual:
 - `config.py`: modelos de configuração;
 - `errors.py`: erros internos;
 - `loader.py`: leitura segura e parse;
-- `validation.py`: validação semântica;
-- `matcher.py`, `normalization.py`, `scoring.py`, `router.py`: reservados para próximas etapas.
+- `validation.py`: validação semântica, incluindo regras dependentes da normalização oficial;
+- `normalization.py`: normalização determinística de mensagens e evidências;
+- `matcher.py`: matching determinístico de `term` e `phrase`;
+- `scoring.py`, `router.py`: reservados para próximas etapas.
 
 ## Política de implementação
 

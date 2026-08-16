@@ -8,7 +8,7 @@ python -m pytest -v
 
 ## Estado atual
 
-A suíte documentada possui **66 testes**.
+A suíte documentada possui **97 testes**.
 
 Cobertura atual:
 
@@ -34,7 +34,17 @@ Cobertura atual:
 - formato SHA-256 hexadecimal minúsculo;
 - criação e estabilidade do `RulesetSnapshot`;
 - inclusão das configurações do Router no snapshot;
-- integração do snapshot ao loader.
+- integração do snapshot ao loader;
+- normalização NFKC + `casefold()` + accent-insensitive + whitespace;
+- preservação de pontuação na representação normalizada;
+- `EvidenceMatch` congelado e seus invariantes;
+- matching de `phrase` por substring literal contínua;
+- matching de `term` com fronteiras formais;
+- primeira ocorrência válida de uma evidência;
+- preservação do valor original da evidência no resultado;
+- matching agregado imutável e ordenado deterministicamente por `evidence_id`;
+- mensagem vazia resultando em conjunto vazio de matches;
+- rejeição semântica de evidência que normalize para vazio.
 
 ## Matriz normativa
 
@@ -46,7 +56,7 @@ tests/regression/router_v1_cases.json
 
 Os testes atuais validam os 48 casos como artefato normativo: IDs, campos, seleção manual, perfil inválido e repetições de determinismo.
 
-A execução das mensagens pelo Router ainda está pendente. Ela só será habilitada após normalização, matching, scoring e algoritmo de decisão serem implementados.
+A execução completa das mensagens pelo Router ainda está pendente. Normalização e matching já estão implementados; a execução comportamental RT-001–RT-048 depende agora de scoring e algoritmo de decisão.
 
 ## Verificações adicionais
 

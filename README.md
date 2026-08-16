@@ -2,7 +2,7 @@
 
 Router determinístico, declarativo e auditável para seleção de perfis especializados no projeto **Villaz-Lab**.
 
-> **Status:** bootstrap do ruleset validado e reconciliado no checkpoint ROUTER-007. A matriz RT-001–RT-048 está versionada como contrato; o algoritmo completo de decisão ainda não foi implementado.
+> **Status:** ruleset, canonicalização, normalização e matching determinístico implementados. A matriz RT-001–RT-048 permanece versionada como contrato; scoring em runtime e algoritmo completo de decisão ainda não foram implementados.
 
 ## Objetivos
 
@@ -35,14 +35,19 @@ Implementado e testado:
 - JSON determinístico UTF-8;
 - hash lógico SHA-256;
 - `RulesetSnapshot` imutável integrado ao loader;
-- suíte atual com 66 testes.
+- normalização determinística com NFKC, `casefold()`, remoção de diacríticos e colapso de whitespace;
+- matching simétrico de evidências `term` e `phrase`;
+- fronteiras formais de `term` com letras Unicode, números e `_` como caracteres de palavra;
+- `EvidenceMatch` imutável com posição da primeira ocorrência válida;
+- matching agregado determinístico ordenado por `evidence_id`;
+- validação fail-fast de evidência que normalize para vazio;
+- suíte atual com 97 testes.
 
 Próxima etapa planejada:
 
-- normalização de mensagens;
-- matching determinístico.
+- scoring determinístico em runtime.
 
-Depois virão scoring, execução comportamental de RT-001–RT-048 e algoritmo final de decisão. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
+Depois virão execução comportamental de RT-001–RT-048 e algoritmo final de decisão. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
 
 ## Requisitos
 
