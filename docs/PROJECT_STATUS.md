@@ -3,18 +3,23 @@
 ## Implementação concluída
 
 ### IMPLEMENTAÇÃO-001.01
+
 Contratos internos e invariantes básicas.
 
 ### IMPLEMENTAÇÃO-001.02
+
 Modelos formais do ruleset.
 
 ### IMPLEMENTAÇÃO-001.03
+
 Loader estrutural dos YAMLs.
 
 ### IMPLEMENTAÇÃO-001.04
+
 Validação semântica e referências cruzadas.
 
 ### ROUTER-007
+
 Reconciliação entre a especificação consolidada e o repositório:
 
 - separação Domain × Intent preservada em Security / Code Review;
@@ -29,10 +34,12 @@ Reconciliação entre a especificação consolidada e o repositório:
 ## Validação atual
 
 ```text
-124 passed
+180 passed
 ```
 
-A suíte atual comprova modelos, loader, validação semântica, invariantes, integridade da matriz, canonicalização, identidade SHA-256, criação determinística do `RulesetSnapshot`, normalização, matching determinístico e scoring runtime com validações de integridade. A execução comportamental dos 48 casos depende agora da implementação da camada de elegibilidade e decisão.
+A suíte atual comprova modelos, loader, validação semântica, invariantes, integridade da matriz, canonicalização, identidade SHA-256, criação determinística do `RulesetSnapshot`, normalização, matching, scoring, elegibilidade, qualificação estrutural de Routes e decisão determinística em runtime.
+
+A execução comportamental integral dos 48 casos RT permanece como próxima etapa.
 
 Ruleset oficial:
 
@@ -90,7 +97,7 @@ Suíte vigente ao fechamento técnico:
 97 passed
 ```
 
-## IMPLEMENTAÇÃO-001.07 — em fechamento técnico
+## IMPLEMENTAÇÃO-001.07 — concluída
 
 Implementado:
 
@@ -103,26 +110,52 @@ Implementado:
 - ordem fail-fast determinística;
 - contribuições canonicalizadas por `evidence_id`;
 - suporte a iteráveis e generators;
-- API `score_evidence_matches`.
+- API pública `score_evidence_matches`.
 
-Suíte atual:
+Suíte vigente ao fechamento técnico:
 
 ```text
 124 passed
 ```
 
+## IMPLEMENTAÇÃO-001.08 — concluída tecnicamente
+
+Implementado:
+
+- modelo público e imutável `RouteCandidate`;
+- evolução de `RouteDecision` com `route_id` e `comparison_score`;
+- elegibilidade por `minimum_score`;
+- weak-only gate em runtime;
+- avaliação determinística de Domains e Intents;
+- qualificação estrutural de Routes;
+- `comparison_score` transitório sem soma Domain + Intent;
+- gate de conflito entre múltiplos Intents `route_capable`;
+- precedência por maior `priority`;
+- resolução por `minimum_margin`;
+- empate no topo tratado como ambiguidade;
+- candidatos ambíguos ordenados por `comparison_score` DESC e `route_id` ASC;
+- precedência absoluta de `explicit_profile`;
+- perfil explícito inválido ou desabilitado retornando `INVALID_PROFILE`, sem fallback;
+- mapeamento determinístico de `RoutingReason`;
+- semântica de `conflict_resolved`;
+- estados finais `explicit`, `routed`, `ambiguous` e `unrouted`;
+- API pública `decide_route`.
+
+Suíte vigente ao fechamento técnico:
+
+```text
+180 passed
+```
+
 ## Próxima etapa
 
-- elegibilidade e algoritmo determinístico de decisão.
+- execução comportamental e reconciliação da matriz RT-001–RT-048 contra o Router runtime.
 
 ## Ainda não implementado
 
-- threshold/eligibilidade em runtime;
-- weak-only gate em runtime;
-- algoritmo de decisão;
-- execução comportamental de RT-001–RT-048;
-- FastAPI;
+- execução comportamental completa de RT-001–RT-048;
 - Dispatcher;
 - Profile Registry;
+- FastAPI;
 - Ollama;
 - Orchestrator.

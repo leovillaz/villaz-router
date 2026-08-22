@@ -71,16 +71,19 @@ No estado atual, já estão concluídos:
 - scoring determinístico em runtime;
 - `EvidenceContribution` e `ScoringResult`;
 - validações de integridade entre matches e evidências configuradas;
-- suíte com 124 testes no checkpoint atual.
+- elegibilidade por threshold e weak-only gate;
+- qualificação estrutural de Routes;
+- resolução por prioridade e margem;
+- gate de conflito entre Intents `route_capable`;
+- `RouteCandidate` e `RouteDecision`;
+- API pública `decide_route`;
+- suíte com 180 testes no checkpoint atual.
 
 ## O que ainda não deve ser esperado
 
 Ainda não estão concluídos:
 
-- elegibilidade e threshold em runtime;
-- weak-only gate em runtime;
-- seleção automática final;
-- execução comportamental RT-001–RT-048;
+- execução comportamental completa RT-001–RT-048;
 - Dispatcher / Profile Registry;
 - integração FastAPI;
 - integração Ollama.

@@ -7,6 +7,7 @@ from villaz_router.models import (
     EvidenceStrength,
     EvidenceType,
     ScoringResult,
+    RouteCandidate,
     RouteDecision,
     RouteRequest,
     RouteState,
@@ -69,24 +70,43 @@ def test_routed_requires_profile_and_auto_mode() -> None:
     decision = RouteDecision(
         state=RouteState.ROUTED,
         profile="mobile-dev",
+        route_id="route-mobile",
+        comparison_score=18,
         mode=RoutingMode.AUTO,
         reason=RoutingReason.MOBILE_DETECTED,
     )
 
     assert decision.profile == "mobile-dev"
+    assert decision.route_id == "route-mobile"
+    assert decision.comparison_score == 18
 
 
 def test_ambiguous_requires_null_profile() -> None:
+    candidates = (
+        RouteCandidate(
+            route_id="route-docs",
+            profile="docs-dev",
+            comparison_score=20,
+        ),
+        RouteCandidate(
+            route_id="route-mobile",
+            profile="mobile-dev",
+            comparison_score=17,
+        ),
+    )
+
     decision = RouteDecision(
         state=RouteState.AMBIGUOUS,
         profile=None,
+        route_id=None,
+        comparison_score=None,
         mode=RoutingMode.AUTO,
         reason=RoutingReason.AMBIGUOUS_ROUTE,
-        candidates=("docs-dev", "mobile-dev"),
+        candidates=candidates,
     )
 
     assert decision.profile is None
-    assert decision.candidates == ("docs-dev", "mobile-dev")
+    assert decision.candidates == candidates
 
 
 def test_unrouted_requires_null_profile() -> None:
@@ -363,3 +383,146 @@ def test_scoring_result_is_immutable() -> None:
     result = ScoringResult(score=0, contributions=())
     with pytest.raises(ValidationError):
         result.score = 1
+
+def test_route_candidate_rejects_unknown_field() -> None:
+    with pytest.raises(ValidationError):
+        RouteCandidate(
+            route_id="route-docs",
+            profile="docs-dev",
+            comparison_score=10,
+            unknown_field="invalid",
+        )
+
+
+def test_route_candidate_is_immutable() -> None:
+    candidate = RouteCandidate(
+        route_id="route-docs",
+        profile="docs-dev",
+        comparison_score=10,
+    )
+
+    with pytest.raises(ValidationError):
+        candidate.comparison_score = 20
+
+
+def test_routed_decision_requires_route_id() -> None:
+    with pytest.raises(ValidationError):
+        RouteDecision(
+            state=RouteState.ROUTED,
+            profile="mobile-dev",
+            route_id=None,
+            comparison_score=10,
+            mode=RoutingMode.AUTO,
+            reason=RoutingReason.MOBILE_DETECTED,
+        )
+
+
+def test_routed_decision_requires_comparison_score() -> None:
+    with pytest.raises(ValidationError):
+        RouteDecision(
+            state=RouteState.ROUTED,
+            profile="mobile-dev",
+            route_id="route-mobile",
+            comparison_score=None,
+            mode=RoutingMode.AUTO,
+            reason=RoutingReason.MOBILE_DETECTED,
+        )
+
+
+def test_ambiguous_decision_requires_distinct_route_ids() -> None:
+    with pytest.raises(ValidationError):
+        RouteDecision(
+            state=RouteState.AMBIGUOUS,
+            profile=None,
+            route_id=None,
+            comparison_score=None,
+            mode=RoutingMode.AUTO,
+            reason=RoutingReason.AMBIGUOUS_ROUTE,
+            candidates=(
+                RouteCandidate(
+                    route_id="route-docs",
+                    profile="docs-dev",
+                    comparison_score=20,
+                ),
+                RouteCandidate(
+                    route_id="route-docs",
+                    profile="mobile-dev",
+                    comparison_score=17,
+                ),
+            ),
+        )
+
+
+def test_ambiguous_decision_rejects_noncanonical_candidate_order() -> None:
+    with pytest.raises(ValidationError):
+        RouteDecision(
+            state=RouteState.AMBIGUOUS,
+            profile=None,
+            route_id=None,
+            comparison_score=None,
+            mode=RoutingMode.AUTO,
+            reason=RoutingReason.AMBIGUOUS_ROUTE,
+            candidates=(
+                RouteCandidate(
+                    route_id="route-mobile",
+                    profile="mobile-dev",
+                    comparison_score=17,
+                ),
+                RouteCandidate(
+                    route_id="route-docs",
+                    profile="docs-dev",
+                    comparison_score=20,
+                ),
+            ),
+        )
+
+
+def test_ambiguous_decision_uses_route_id_ascending_for_equal_scores() -> None:
+    candidates = (
+        RouteCandidate(
+            route_id="route-a",
+            profile="docs-dev",
+            comparison_score=20,
+        ),
+        RouteCandidate(
+            route_id="route-b",
+            profile="mobile-dev",
+            comparison_score=20,
+        ),
+    )
+
+    decision = RouteDecision(
+        state=RouteState.AMBIGUOUS,
+        profile=None,
+        route_id=None,
+        comparison_score=None,
+        mode=RoutingMode.AUTO,
+        reason=RoutingReason.AMBIGUOUS_ROUTE,
+        candidates=candidates,
+    )
+
+    assert decision.candidates == candidates
+
+
+def test_unrouted_decision_rejects_candidates() -> None:
+    with pytest.raises(ValidationError):
+        RouteDecision(
+            state=RouteState.UNROUTED,
+            profile=None,
+            route_id=None,
+            comparison_score=None,
+            mode=RoutingMode.AUTO,
+            reason=RoutingReason.INSUFFICIENT_EVIDENCE,
+            candidates=(
+                RouteCandidate(
+                    route_id="route-mobile",
+                    profile="mobile-dev",
+                    comparison_score=10,
+                ),
+                RouteCandidate(
+                    route_id="route-docs",
+                    profile="docs-dev",
+                    comparison_score=10,
+                ),
+            ),
+        )

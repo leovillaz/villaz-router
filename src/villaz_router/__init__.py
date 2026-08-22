@@ -31,6 +31,7 @@ from villaz_router.models import (
     Profile,
     ProfilesDocument,
     Route,
+    RouteCandidate,
     RouteCondition,
     RouteDecision,
     RouteRequest,
@@ -43,6 +44,7 @@ from villaz_router.models import (
     ScoringResult,
 )
 from villaz_router.normalization import normalize_text
+from villaz_router.router import decide_route
 from villaz_router.scoring import score_evidence_matches
 from villaz_router.validation import validate_ruleset_semantics
 
@@ -51,6 +53,7 @@ __all__ = [
     "canonical_ruleset_json",
     "canonical_ruleset_payload",
     "compute_ruleset_hash",
+    "decide_route",
     "create_ruleset_snapshot",
     "Domain",
     "DomainsDocument",
@@ -65,6 +68,7 @@ __all__ = [
     "Profile",
     "ProfilesDocument",
     "Route",
+    "RouteCandidate",
     "RouteCondition",
     "RouteDecision",
     "RouteRequest",

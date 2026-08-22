@@ -2,7 +2,7 @@
 
 Router determinístico, declarativo e auditável para seleção de perfis especializados no projeto **Villaz-Lab**.
 
-> **Status:** ruleset, canonicalização, normalização, matching e scoring determinístico em runtime implementados. A matriz RT-001–RT-048 permanece versionada como contrato; elegibilidade e algoritmo completo de decisão ainda não foram implementados.
+> **Status:** ruleset, canonicalização, normalização, matching, scoring, elegibilidade e decisão determinística em runtime implementados. A `IMPLEMENTAÇÃO-001.08` foi concluída tecnicamente, incluindo `decide_route()` como API pública. A matriz RT-001–RT-048 permanece versionada como contrato normativo e será a próxima etapa de validação comportamental.
 
 ## Objetivos
 
@@ -46,13 +46,23 @@ Implementado e testado:
 - resultado estruturado por `EvidenceContribution` e `ScoringResult`;
 - validações fail-fast de integridade entre `EvidenceMatch` e `Evidence`;
 - API pública `score_evidence_matches`;
-- suíte atual com 124 testes.
+- elegibilidade por `minimum_score` e weak-only gate;
+- avaliação determinística de Domains e Intents;
+- qualificação estrutural de Routes;
+- gate de conflito entre múltiplos Intents `route_capable`;
+- precedência por maior `priority`;
+- resolução por `comparison_score` e `minimum_margin`;
+- estados finais `explicit`, `routed`, `ambiguous` e `unrouted`;
+- candidatos ambíguos canônicos por score decrescente e `route_id` crescente;
+- `RouteCandidate` e `RouteDecision` com invariantes de estado;
+- API pública `decide_route`;
+- suíte atual com 180 testes.
 
 Próxima etapa planejada:
 
-- elegibilidade e algoritmo determinístico de decisão: threshold, weak-only gate, avaliação de rotas, precedência, margem e estados finais.
+- executar e validar comportamentalmente a matriz RT-001–RT-048 contra o Router runtime implementado.
 
-Depois virá a execução comportamental de RT-001–RT-048. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
+Após essa validação virão Dispatcher / Profile Registry, FastAPI e integração com Ollama. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
 
 ## Requisitos
 

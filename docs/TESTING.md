@@ -8,7 +8,7 @@ python -m pytest -v
 
 ## Estado atual
 
-A suíte documentada possui **124 testes**.
+A suíte documentada possui **180 testes**.
 
 Cobertura atual:
 
@@ -44,7 +44,7 @@ Cobertura atual:
 - preservação do valor original da evidência no resultado;
 - matching agregado imutável e ordenado deterministicamente por `evidence_id`;
 - mensagem vazia resultando em conjunto vazio de matches;
-- rejeição semântica de evidência que normalize para vazio.
+- rejeição semântica de evidência que normalize para vazio;
 - contratos e imutabilidade de `EvidenceContribution` e `ScoringResult`;
 - invariant `score == soma dos weights`;
 - scoring usando exclusivamente pesos de `ScoringConfig`;
@@ -53,7 +53,26 @@ Cobertura atual:
 - detecção determinística de IDs duplicados;
 - rejeição de `EvidenceMatch` desconhecido;
 - validação exata de tipo e valor entre match e evidência configurada;
-- ordem fail-fast determinística dos erros de scoring.
+- ordem fail-fast determinística dos erros de scoring;
+- elegibilidade por `minimum_score`;
+- weak-only gate e contribuição medium/strong;
+- avaliação de todos os Domains e Intents em ordem determinística;
+- qualificação estrutural de Routes e resolução exata de referências;
+- exclusão de Routes desabilitadas;
+- integridade defensiva de profiles;
+- conflito entre múltiplos Intents `route_capable`;
+- precedência por maior `priority`;
+- resolução por `minimum_margin`;
+- empate no maior `comparison_score`;
+- faixa estrita de candidatos ambíguos;
+- ordenação canônica de `RouteCandidate`;
+- precedência absoluta de `explicit_profile`;
+- perfil explícito inválido ou desabilitado com `INVALID_PROFILE`, sem fallback;
+- estado `unrouted`;
+- decisões finais `routed` e `ambiguous`;
+- semântica de `conflict_resolved`;
+- mapeamento determinístico de `RoutingReason`;
+- exportação pública de `decide_route`.
 
 ## Matriz normativa
 
@@ -65,7 +84,7 @@ tests/regression/router_v1_cases.json
 
 Os testes atuais validam os 48 casos como artefato normativo: IDs, campos, seleção manual, perfil inválido e repetições de determinismo.
 
-A execução completa das mensagens pelo Router ainda está pendente. Normalização, matching e scoring runtime já estão implementados; a execução comportamental RT-001–RT-048 depende agora da camada de elegibilidade e do algoritmo de decisão.
+O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão já está implementado. A próxima etapa é executar e reconciliar comportamentalmente RT-001–RT-048 contra `decide_route()`; até este checkpoint, a matriz continua sendo validada também como artefato normativo.
 
 ## Verificações adicionais
 

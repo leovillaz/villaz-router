@@ -39,53 +39,28 @@ class RouteRequest(BaseModel):
     explicit_profile: str | None = None
 
 
+class RouteCandidate(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    route_id: str = Field(min_length=1)
+    profile: str = Field(min_length=1)
+    comparison_score: int = Field(ge=0)
+
+
 class RouteDecision(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        frozen=True,
-    )
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     state: RouteState
     profile: str | None
+    route_id: str | None = None
+    comparison_score: int | None = Field(default=None, ge=0)
     mode: RoutingMode
     reason: RoutingReason
-
     conflict_resolved: bool = False
-    candidates: tuple[str, ...] = Field(default_factory=tuple)
+    candidates: tuple[RouteCandidate, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
     def validate_state_contract(self) -> "RouteDecision":
-        if self.state in {RouteState.EXPLICIT, RouteState.ROUTED}:
-            if self.profile is None:
-                raise ValueError(
-                    f"state={self.state.value} requires a profile"
-                )
-
-        if self.state in {RouteState.AMBIGUOUS, RouteState.UNROUTED}:
-            if self.profile is not None:
-                raise ValueError(
-                    f"state={self.state.value} requires profile=None"
-                )
-
-        if self.state is RouteState.EXPLICIT:
-            if self.mode is not RoutingMode.MANUAL:
-                raise ValueError(
-                    "state=explicit requires mode=manual"
-                )
-        else:
-            if self.mode is not RoutingMode.AUTO:
-                raise ValueError(
-                    f"state={self.state.value} requires mode=auto"
-                )
-
-        if len(self.candidates) != len(set(self.candidates)):
-            raise ValueError("candidates cannot contain duplicates")
-
-        if self.profile is not None and self.profile in self.candidates:
-            raise ValueError(
-                "selected profile cannot also be listed as a candidate"
-            )
-
         successful_reasons = {
             RoutingReason.SECURITY_REVIEW_DETECTED,
             RoutingReason.FISCAL_FINANCE_DETECTED,
@@ -95,42 +70,86 @@ class RouteDecision(BaseModel):
         }
 
         if self.state is RouteState.EXPLICIT:
+            if self.profile is None:
+                raise ValueError("state=explicit requires a profile")
+            if self.route_id is not None:
+                raise ValueError("state=explicit requires route_id=None")
+            if self.comparison_score is not None:
+                raise ValueError("state=explicit requires comparison_score=None")
+            if self.mode is not RoutingMode.MANUAL:
+                raise ValueError("state=explicit requires mode=manual")
             if self.reason is not RoutingReason.USER_SELECTED_PROFILE:
-                raise ValueError(
-                    "state=explicit requires reason=user_selected_profile"
-                )
-
-        if self.state is RouteState.ROUTED:
-            if self.reason not in successful_reasons:
-                raise ValueError(
-                    "state=routed requires a successful routing reason"
-                )
-
-        if self.state is RouteState.AMBIGUOUS:
-            if self.reason is not RoutingReason.AMBIGUOUS_ROUTE:
-                raise ValueError(
-                    "state=ambiguous requires reason=ambiguous_route"
-                )
-
-        if self.state is RouteState.UNROUTED:
-            if self.reason is not RoutingReason.INSUFFICIENT_EVIDENCE:
-                raise ValueError(
-                    "state=unrouted requires reason=insufficient_evidence"
-                )
-
-        if self.state in {RouteState.EXPLICIT, RouteState.ROUTED}:
+                raise ValueError("state=explicit requires reason=user_selected_profile")
+            if self.conflict_resolved:
+                raise ValueError("state=explicit requires conflict_resolved=False")
             if self.candidates:
+                raise ValueError("state=explicit requires candidates=()")
+
+        elif self.state is RouteState.ROUTED:
+            if self.profile is None:
+                raise ValueError("state=routed requires a profile")
+            if self.route_id is None:
+                raise ValueError("state=routed requires a route_id")
+            if self.comparison_score is None:
+                raise ValueError("state=routed requires a comparison_score")
+            if self.mode is not RoutingMode.AUTO:
+                raise ValueError("state=routed requires mode=auto")
+            if self.reason not in successful_reasons:
+                raise ValueError("state=routed requires a successful routing reason")
+            if self.candidates:
+                raise ValueError("state=routed requires candidates=()")
+
+        elif self.state is RouteState.AMBIGUOUS:
+            if self.profile is not None:
+                raise ValueError("state=ambiguous requires profile=None")
+            if self.route_id is not None:
+                raise ValueError("state=ambiguous requires route_id=None")
+            if self.comparison_score is not None:
+                raise ValueError("state=ambiguous requires comparison_score=None")
+            if self.mode is not RoutingMode.AUTO:
+                raise ValueError("state=ambiguous requires mode=auto")
+            if self.reason is not RoutingReason.AMBIGUOUS_ROUTE:
+                raise ValueError("state=ambiguous requires reason=ambiguous_route")
+            if self.conflict_resolved:
+                raise ValueError("state=ambiguous requires conflict_resolved=False")
+            if len(self.candidates) < 2:
+                raise ValueError("state=ambiguous requires at least two candidates")
+
+            route_ids = tuple(candidate.route_id for candidate in self.candidates)
+            if len(route_ids) != len(set(route_ids)):
+                raise ValueError("ambiguous candidates require distinct route_id values")
+
+            canonical_candidates = tuple(
+                sorted(
+                    self.candidates,
+                    key=lambda candidate: (
+                        -candidate.comparison_score,
+                        candidate.route_id,
+                    ),
+                )
+            )
+            if self.candidates != canonical_candidates:
                 raise ValueError(
-                    "successful decisions cannot contain candidates"
+                    "ambiguous candidates must be ordered by comparison_score DESC then route_id ASC"
                 )
 
-        if self.conflict_resolved and self.state is not RouteState.ROUTED:
-            raise ValueError(
-                "conflict_resolved is only valid for routed decisions"
-            )
+        elif self.state is RouteState.UNROUTED:
+            if self.profile is not None:
+                raise ValueError("state=unrouted requires profile=None")
+            if self.route_id is not None:
+                raise ValueError("state=unrouted requires route_id=None")
+            if self.comparison_score is not None:
+                raise ValueError("state=unrouted requires comparison_score=None")
+            if self.mode is not RoutingMode.AUTO:
+                raise ValueError("state=unrouted requires mode=auto")
+            if self.reason is not RoutingReason.INSUFFICIENT_EVIDENCE:
+                raise ValueError("state=unrouted requires reason=insufficient_evidence")
+            if self.conflict_resolved:
+                raise ValueError("state=unrouted requires conflict_resolved=False")
+            if self.candidates:
+                raise ValueError("state=unrouted requires candidates=()")
 
         return self
-
 
 class EvidenceType(StrEnum):
     TERM = "term"
