@@ -176,6 +176,42 @@ class EvidenceMatch(BaseModel):
         return self
 
 
+class EvidenceContribution(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    evidence_id: str = Field(min_length=1)
+    strength: EvidenceStrength
+    weight: int = Field(gt=0)
+
+
+class ScoringResult(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+    )
+
+    score: int = Field(ge=0)
+    contributions: tuple[EvidenceContribution, ...] = Field(
+        default_factory=tuple
+    )
+
+    @model_validator(mode="after")
+    def validate_score_total(self) -> "ScoringResult":
+        expected_score = sum(
+            contribution.weight
+            for contribution in self.contributions
+        )
+        if self.score != expected_score:
+            raise ValueError(
+                "score must equal the sum of contribution weights"
+            )
+
+        return self
+
+
 class Profile(BaseModel):
     model_config = ConfigDict(
         extra="forbid",

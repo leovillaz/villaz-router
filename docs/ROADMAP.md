@@ -16,18 +16,18 @@
 
 ## Fase 2 — Classificação
 
-- [ ] Normalização Unicode NFKC
-- [ ] lowercase
-- [ ] collapse whitespace
-- [ ] accent folding
-- [ ] boundary matching
-- [ ] matching de `term`
-- [ ] matching de `phrase`
-- [ ] evidência uma vez por request
+- [x] Normalização Unicode NFKC
+- [x] lowercase/casefold
+- [x] collapse whitespace
+- [x] accent folding
+- [x] boundary matching
+- [x] matching de `term`
+- [x] matching de `phrase`
+- [x] evidência uma vez por request
 
 ## Fase 3 — Decisão
 
-- [ ] scoring
+- [x] scoring
 - [ ] threshold
 - [ ] weak-only gate
 - [ ] route evaluation

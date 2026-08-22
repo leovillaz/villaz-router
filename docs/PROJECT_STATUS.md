@@ -29,10 +29,10 @@ Reconciliação entre a especificação consolidada e o repositório:
 ## Validação atual
 
 ```text
-97 passed
+124 passed
 ```
 
-A suíte atual comprova modelos, loader, validação semântica, invariantes, integridade da matriz, canonicalização, identidade SHA-256, criação determinística do `RulesetSnapshot`, normalização de texto e matching determinístico de evidências. A execução comportamental dos 48 casos depende agora da implementação de scoring e decisão.
+A suíte atual comprova modelos, loader, validação semântica, invariantes, integridade da matriz, canonicalização, identidade SHA-256, criação determinística do `RulesetSnapshot`, normalização, matching determinístico e scoring runtime com validações de integridade. A execução comportamental dos 48 casos depende agora da implementação da camada de elegibilidade e decisão.
 
 Ruleset oficial:
 
@@ -90,13 +90,35 @@ Suíte vigente ao fechamento técnico:
 97 passed
 ```
 
+## IMPLEMENTAÇÃO-001.07 — em fechamento técnico
+
+Implementado:
+
+- modelos públicos `EvidenceContribution` e `ScoringResult`;
+- invariant estrutural `score == soma dos weights`;
+- código `INVALID_SCORING_INPUT`;
+- scoring configurável por `ScoringConfig`;
+- associação determinística `EvidenceMatch` → `Evidence` por `evidence_id`;
+- validação de IDs duplicados, referências desconhecidas e divergências de tipo/valor;
+- ordem fail-fast determinística;
+- contribuições canonicalizadas por `evidence_id`;
+- suporte a iteráveis e generators;
+- API `score_evidence_matches`.
+
+Suíte atual:
+
+```text
+124 passed
+```
+
 ## Próxima etapa
 
-- scoring determinístico em runtime.
+- elegibilidade e algoritmo determinístico de decisão.
 
 ## Ainda não implementado
 
-- scoring em runtime;
+- threshold/eligibilidade em runtime;
+- weak-only gate em runtime;
 - algoritmo de decisão;
 - execução comportamental de RT-001–RT-048;
 - FastAPI;

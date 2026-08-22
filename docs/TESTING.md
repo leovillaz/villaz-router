@@ -8,7 +8,7 @@ python -m pytest -v
 
 ## Estado atual
 
-A suíte documentada possui **97 testes**.
+A suíte documentada possui **124 testes**.
 
 Cobertura atual:
 
@@ -45,6 +45,15 @@ Cobertura atual:
 - matching agregado imutável e ordenado deterministicamente por `evidence_id`;
 - mensagem vazia resultando em conjunto vazio de matches;
 - rejeição semântica de evidência que normalize para vazio.
+- contratos e imutabilidade de `EvidenceContribution` e `ScoringResult`;
+- invariant `score == soma dos weights`;
+- scoring usando exclusivamente pesos de `ScoringConfig`;
+- scoring vazio com `score=0` e `contributions=()`;
+- independência da ordem física e suporte a generators;
+- detecção determinística de IDs duplicados;
+- rejeição de `EvidenceMatch` desconhecido;
+- validação exata de tipo e valor entre match e evidência configurada;
+- ordem fail-fast determinística dos erros de scoring.
 
 ## Matriz normativa
 
@@ -56,7 +65,7 @@ tests/regression/router_v1_cases.json
 
 Os testes atuais validam os 48 casos como artefato normativo: IDs, campos, seleção manual, perfil inválido e repetições de determinismo.
 
-A execução completa das mensagens pelo Router ainda está pendente. Normalização e matching já estão implementados; a execução comportamental RT-001–RT-048 depende agora de scoring e algoritmo de decisão.
+A execução completa das mensagens pelo Router ainda está pendente. Normalização, matching e scoring runtime já estão implementados; a execução comportamental RT-001–RT-048 depende agora da camada de elegibilidade e do algoritmo de decisão.
 
 ## Verificações adicionais
 

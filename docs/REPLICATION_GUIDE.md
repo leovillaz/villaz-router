@@ -45,13 +45,7 @@ pytest -v
 ## Etapa F — Validar o ruleset
 
 ```bash
-python - <<'PY'
-from pathlib import Path
-from villaz_router.loader import load_and_validate_ruleset_documents
-
-load_and_validate_ruleset_documents(Path("."))
-print("ruleset: OK")
-PY
+python -c 'from pathlib import Path; from villaz_router.loader import load_and_validate_ruleset_documents; load_and_validate_ruleset_documents(Path(".")); print("ruleset: OK")'
 ```
 
 ## Resultado mínimo para considerar a réplica válida
@@ -63,17 +57,31 @@ PY
 - validação semântica aprovada;
 - working tree Git limpo.
 
+## O que já está concluído
+
+No estado atual, já estão concluídos:
+
+- canonicalização semântica;
+- JSON determinístico UTF-8;
+- hash lógico SHA-256;
+- `RulesetSnapshot`;
+- normalização determinística de mensagem;
+- matching de `term` e `phrase`;
+- validação de evidências normalizadas;
+- scoring determinístico em runtime;
+- `EvidenceContribution` e `ScoringResult`;
+- validações de integridade entre matches e evidências configuradas;
+- suíte com 124 testes no checkpoint atual.
+
 ## O que ainda não deve ser esperado
 
-No estado atual, ainda não estão concluídos:
+Ainda não estão concluídos:
 
-- canonicalização;
-- hash lógico;
-- snapshot final;
-- normalização de mensagem;
-- matching;
-- scoring;
+- elegibilidade e threshold em runtime;
+- weak-only gate em runtime;
 - seleção automática final;
+- execução comportamental RT-001–RT-048;
+- Dispatcher / Profile Registry;
 - integração FastAPI;
 - integração Ollama.
 

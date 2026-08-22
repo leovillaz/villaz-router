@@ -2,7 +2,7 @@
 
 Router determinístico, declarativo e auditável para seleção de perfis especializados no projeto **Villaz-Lab**.
 
-> **Status:** ruleset, canonicalização, normalização e matching determinístico implementados. A matriz RT-001–RT-048 permanece versionada como contrato; scoring em runtime e algoritmo completo de decisão ainda não foram implementados.
+> **Status:** ruleset, canonicalização, normalização, matching e scoring determinístico em runtime implementados. A matriz RT-001–RT-048 permanece versionada como contrato; elegibilidade e algoritmo completo de decisão ainda não foram implementados.
 
 ## Objetivos
 
@@ -40,14 +40,19 @@ Implementado e testado:
 - fronteiras formais de `term` com letras Unicode, números e `_` como caracteres de palavra;
 - `EvidenceMatch` imutável com posição da primeira ocorrência válida;
 - matching agregado determinístico ordenado por `evidence_id`;
+- `match_evidence` e `match_evidence_set` recebem a mensagem já normalizada em `normalized_message`; `evidence.value` é normalizado internamente pelo matcher;
 - validação fail-fast de evidência que normalize para vazio;
-- suíte atual com 97 testes.
+- scoring determinístico baseado em `EvidenceStrength` e `ScoringConfig`;
+- resultado estruturado por `EvidenceContribution` e `ScoringResult`;
+- validações fail-fast de integridade entre `EvidenceMatch` e `Evidence`;
+- API pública `score_evidence_matches`;
+- suíte atual com 124 testes.
 
 Próxima etapa planejada:
 
-- scoring determinístico em runtime.
+- elegibilidade e algoritmo determinístico de decisão: threshold, weak-only gate, avaliação de rotas, precedência, margem e estados finais.
 
-Depois virão execução comportamental de RT-001–RT-048 e algoritmo final de decisão. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
+Depois virá a execução comportamental de RT-001–RT-048. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
 
 ## Requisitos
 

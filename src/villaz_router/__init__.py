@@ -8,6 +8,7 @@ from villaz_router.canonical import (
 from villaz_router.config import (
     RouterConfigDocument,
     RouterSettings,
+    ScoringConfig,
 )
 from villaz_router.errors import RouterError, RouterErrorCode
 from villaz_router.matcher import match_evidence, match_evidence_set
@@ -21,6 +22,7 @@ from villaz_router.models import (
     Domain,
     DomainsDocument,
     Evidence,
+    EvidenceContribution,
     EvidenceMatch,
     EvidenceStrength,
     EvidenceType,
@@ -38,8 +40,10 @@ from villaz_router.models import (
     RoutingMode,
     RoutingReason,
     RulesetSnapshot,
+    ScoringResult,
 )
 from villaz_router.normalization import normalize_text
+from villaz_router.scoring import score_evidence_matches
 from villaz_router.validation import validate_ruleset_semantics
 
 __all__ = [
@@ -51,6 +55,7 @@ __all__ = [
     "Domain",
     "DomainsDocument",
     "Evidence",
+    "EvidenceContribution",
     "EvidenceMatch",
     "EvidenceStrength",
     "EvidenceType",
@@ -69,14 +74,17 @@ __all__ = [
     "RouterError",
     "RouterErrorCode",
     "RouterSettings",
+    "ScoringConfig",
     "RoutingDocument",
     "RoutingMode",
     "RoutingReason",
     "RulesetSnapshot",
+    "ScoringResult",
     "load_and_validate_ruleset_documents",
     "match_evidence",
     "match_evidence_set",
     "normalize_text",
+    "score_evidence_matches",
     "load_ruleset_documents",
     "load_ruleset_snapshot",
     "validate_ruleset_semantics",

@@ -33,7 +33,8 @@ No estágio atual:
 - `validation.py`: validação semântica, incluindo regras dependentes da normalização oficial;
 - `normalization.py`: normalização determinística de mensagens e evidências;
 - `matcher.py`: matching determinístico de `term` e `phrase`;
-- `scoring.py`, `router.py`: reservados para próximas etapas.
+- `scoring.py`: scoring determinístico, validações runtime de integridade e construção de `ScoringResult`;
+- `router.py`: reservado para elegibilidade e algoritmo final de decisão.
 
 ## Política de implementação
 

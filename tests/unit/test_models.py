@@ -2,8 +2,11 @@ import pytest
 from pydantic import ValidationError
 
 from villaz_router.models import (
+    EvidenceContribution,
     EvidenceMatch,
+    EvidenceStrength,
     EvidenceType,
+    ScoringResult,
     RouteDecision,
     RouteRequest,
     RouteState,
@@ -249,3 +252,114 @@ def test_evidence_match_rejects_unknown_type() -> None:
             start=0,
             end=7,
         )
+
+
+def test_evidence_contribution_accepts_valid_contract() -> None:
+    contribution = EvidenceContribution(
+        evidence_id="E-001",
+        strength=EvidenceStrength.STRONG,
+        weight=10,
+    )
+
+    assert contribution.evidence_id == "E-001"
+    assert contribution.strength is EvidenceStrength.STRONG
+    assert contribution.weight == 10
+
+
+def test_evidence_contribution_rejects_empty_evidence_id() -> None:
+    with pytest.raises(ValidationError):
+        EvidenceContribution(
+            evidence_id="",
+            strength=EvidenceStrength.STRONG,
+            weight=10,
+        )
+
+
+def test_evidence_contribution_rejects_non_positive_weight() -> None:
+    with pytest.raises(ValidationError):
+        EvidenceContribution(
+            evidence_id="E-001",
+            strength=EvidenceStrength.WEAK,
+            weight=0,
+        )
+
+
+def test_evidence_contribution_rejects_unknown_field() -> None:
+    with pytest.raises(ValidationError):
+        EvidenceContribution(
+            evidence_id="E-001",
+            strength=EvidenceStrength.MEDIUM,
+            weight=4,
+            unknown_field="invalid",
+        )
+
+
+def test_evidence_contribution_is_immutable() -> None:
+    contribution = EvidenceContribution(
+        evidence_id="E-001",
+        strength=EvidenceStrength.MEDIUM,
+        weight=4,
+    )
+
+    with pytest.raises(ValidationError):
+        contribution.weight = 10
+
+
+def test_scoring_result_accepts_valid_contract() -> None:
+    contributions = (
+        EvidenceContribution(
+            evidence_id="E-001",
+            strength=EvidenceStrength.STRONG,
+            weight=10,
+        ),
+        EvidenceContribution(
+            evidence_id="E-002",
+            strength=EvidenceStrength.WEAK,
+            weight=1,
+        ),
+    )
+
+    result = ScoringResult(
+        score=11,
+        contributions=contributions,
+    )
+
+    assert result.score == 11
+    assert result.contributions == contributions
+
+
+def test_scoring_result_accepts_empty_result() -> None:
+    result = ScoringResult(score=0, contributions=())
+    assert result.score == 0
+    assert result.contributions == ()
+
+
+def test_scoring_result_rejects_negative_score() -> None:
+    with pytest.raises(ValidationError):
+        ScoringResult(score=-1, contributions=())
+
+
+def test_scoring_result_rejects_inconsistent_total() -> None:
+    contribution = EvidenceContribution(
+        evidence_id="E-001",
+        strength=EvidenceStrength.STRONG,
+        weight=10,
+    )
+    with pytest.raises(ValidationError):
+        ScoringResult(score=11, contributions=(contribution,))
+
+
+def test_scoring_result_rejects_nonzero_score_without_contributions() -> None:
+    with pytest.raises(ValidationError):
+        ScoringResult(score=1, contributions=())
+
+
+def test_scoring_result_rejects_unknown_field() -> None:
+    with pytest.raises(ValidationError):
+        ScoringResult(score=0, contributions=(), unknown_field="invalid")
+
+
+def test_scoring_result_is_immutable() -> None:
+    result = ScoringResult(score=0, contributions=())
+    with pytest.raises(ValidationError):
+        result.score = 1
