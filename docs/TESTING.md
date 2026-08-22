@@ -8,7 +8,7 @@ python -m pytest -v
 
 ## Estado atual
 
-A suíte documentada possui **180 testes**.
+A suíte documentada possui **228 testes**.
 
 Cobertura atual:
 
@@ -26,6 +26,8 @@ Cobertura atual:
 - normalização accent-insensitive na validação de duplicatas;
 - associação da rota de segurança ao intent `review-security`;
 - integridade do contrato RT-001–RT-048;
+- execução comportamental integral de RT-001–RT-048 contra `decide_route()`;
+- determinismo de RT-045–RT-048 com 10 repetições por caso;
 - canonicalização determinística do ruleset;
 - independência da ordem física de profiles, domains, intents, routes e evidências;
 - serialização compacta em JSON UTF-8;
@@ -84,7 +86,7 @@ tests/regression/router_v1_cases.json
 
 Os testes atuais validam os 48 casos como artefato normativo: IDs, campos, seleção manual, perfil inválido e repetições de determinismo.
 
-O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão já está implementado. A próxima etapa é executar e reconciliar comportamentalmente RT-001–RT-048 contra `decide_route()`; até este checkpoint, a matriz continua sendo validada também como artefato normativo.
+O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão está implementado. RT-001–RT-048 são validados tanto como artefato normativo quanto comportamentalmente contra `decide_route()`. RT-045–RT-048 são executados 10 vezes cada para verificar determinismo. A próxima etapa técnica é Dispatcher / Profile Registry.
 
 ## Verificações adicionais
 

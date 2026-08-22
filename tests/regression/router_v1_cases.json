@@ -192,7 +192,7 @@
       "expected_state": "routed",
       "expected_profile": "docs-dev",
       "reason": "documentation_intent_detected",
-      "conflict_resolved": true,
+      "conflict_resolved": false,
       "rule": "R04/R08",
       "repetitions": 1,
       "expected_error": null
@@ -413,7 +413,7 @@
       "expected_state": "routed",
       "expected_profile": "docs-dev",
       "reason": "documentation_intent_detected",
-      "conflict_resolved": true,
+      "conflict_resolved": false,
       "rule": "R03/R04/R08",
       "repetitions": 1,
       "expected_error": null

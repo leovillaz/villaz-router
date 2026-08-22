@@ -34,7 +34,7 @@ Reconciliação entre a especificação consolidada e o repositório:
 ## Validação atual
 
 ```text
-180 passed
+228 passed
 ```
 
 A suíte atual comprova modelos, loader, validação semântica, invariantes, integridade da matriz, canonicalização, identidade SHA-256, criação determinística do `RulesetSnapshot`, normalização, matching, scoring, elegibilidade, qualificação estrutural de Routes e decisão determinística em runtime.
@@ -147,13 +147,24 @@ Suíte vigente ao fechamento técnico:
 180 passed
 ```
 
+## VALIDAÇÃO-001.09 — concluída tecnicamente
+
+Validado:
+
+- executor comportamental de RT-001–RT-048 contra `decide_route()`;
+- 48 casos executados com sucesso;
+- RT-045–RT-048 executados 10 vezes cada conforme contrato de determinismo;
+- `RT-015` e `RT-032` reconciliados em `conflict_resolved=false`, preservando mensagem, perfil, reason e ruleset;
+- divergências classificadas como inconsistência da matriz normativa, não erro de implementação ou ruleset;
+- suíte completa ao fechamento técnico: `228 passed`;
+- `git diff --check` aprovado.
+
 ## Próxima etapa
 
-- execução comportamental e reconciliação da matriz RT-001–RT-048 contra o Router runtime.
+- Dispatcher / Profile Registry.
 
 ## Ainda não implementado
 
-- execução comportamental completa de RT-001–RT-048;
 - Dispatcher;
 - Profile Registry;
 - FastAPI;

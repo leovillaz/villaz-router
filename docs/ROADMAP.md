@@ -28,15 +28,15 @@
 ## Fase 3 — Decisão
 
 - [x] scoring
-- [ ] threshold
-- [ ] weak-only gate
-- [ ] route evaluation
-- [ ] precedência
-- [ ] margin
-- [ ] ambiguous/unrouted
-- [ ] manual explicit profile
-- [ ] executar comportamentalmente RT-001–RT-048
-- [ ] repetir RT-045–RT-048 dez vezes
+- [x] threshold
+- [x] weak-only gate
+- [x] route evaluation
+- [x] precedência
+- [x] margin
+- [x] ambiguous/unrouted
+- [x] manual explicit profile
+- [x] executar comportamentalmente RT-001–RT-048
+- [x] repetir RT-045–RT-048 dez vezes
 
 ## Fase 4 — Integrações
 

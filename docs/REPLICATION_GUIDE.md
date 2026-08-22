@@ -77,13 +77,16 @@ No estado atual, já estão concluídos:
 - gate de conflito entre Intents `route_capable`;
 - `RouteCandidate` e `RouteDecision`;
 - API pública `decide_route`;
-- suíte com 180 testes no checkpoint atual.
+- suíte com 228 testes no checkpoint atual.
+
+## Validação comportamental
+
+RT-001–RT-048 estão executados contra `decide_route()` e reconciliados. Os casos RT-045–RT-048 são repetidos 10 vezes cada para verificar determinismo. O baseline atual da suíte é `228 passed`.
 
 ## O que ainda não deve ser esperado
 
 Ainda não estão concluídos:
 
-- execução comportamental completa RT-001–RT-048;
 - Dispatcher / Profile Registry;
 - integração FastAPI;
 - integração Ollama.
