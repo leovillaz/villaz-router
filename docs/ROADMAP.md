@@ -42,7 +42,10 @@
 
 Somente após o Router isolado e a matriz comportamental estarem validados:
 
-- [ ] Dispatcher / Profile Registry
+- [x] Profile Registry
+- [ ] Dispatcher
+- [ ] validação de compatibilidade Router ↔ Profile Registry
+- [ ] configuração operacional oficial `profiles/profiles.yaml` após definição de modelos e prompts
 - [ ] FastAPI
 - [ ] integração com Ollama
 - [ ] validar o fluxo API → Router → Dispatcher/Profile Registry → Ollama

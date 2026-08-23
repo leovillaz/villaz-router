@@ -8,7 +8,7 @@ python -m pytest -v
 
 ## Estado atual
 
-A suíte documentada possui **228 testes**.
+A suíte corrente possui **333 testes**. O checkpoint histórico `VALIDAÇÃO-001.09` permanece registrado com `228 passed`.
 
 Cobertura atual:
 
@@ -74,7 +74,19 @@ Cobertura atual:
 - decisões finais `routed` e `ambiguous`;
 - semântica de `conflict_resolved`;
 - mapeamento determinístico de `RoutingReason`;
-- exportação pública de `decide_route`.
+- exportação pública de `decide_route`;
+- contratos e imutabilidade de `ProfileDefinition`;
+- validação estrita de IDs, booleanos e strings obrigatórias do Profile Registry;
+- contratos e imutabilidade de `ProfileRegistrySnapshot`;
+- resolução exata por `get()`, `contains()` e `list_profiles()`;
+- domínio próprio de erros do Registry;
+- canonicalização determinística do Registry;
+- ordem física de profiles no YAML sem efeito no `registry_hash`;
+- alterações semânticas e whitespace válido alterando o `registry_hash`;
+- serialização UTF-8 compacta sem normalização destrutiva;
+- loader de `profiles/profiles.yaml` e classificação determinística de erros;
+- cobertura integrada loader → definição → canonicalização → snapshot;
+- exports públicos do Profile Registry.
 
 ## Matriz normativa
 
@@ -86,7 +98,7 @@ tests/regression/router_v1_cases.json
 
 Os testes atuais validam os 48 casos como artefato normativo: IDs, campos, seleção manual, perfil inválido e repetições de determinismo.
 
-O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão está implementado. RT-001–RT-048 são validados tanto como artefato normativo quanto comportamentalmente contra `decide_route()`. RT-045–RT-048 são executados 10 vezes cada para verificar determinismo. A próxima etapa técnica é Dispatcher / Profile Registry.
+O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão está implementado. RT-001–RT-048 são validados tanto como artefato normativo quanto comportamentalmente contra `decide_route()`. RT-045–RT-048 são executados 10 vezes cada para verificar determinismo. O Profile Registry também está implementado e validado. A próxima etapa técnica é o Dispatcher e a validação de compatibilidade de runtime entre Router e Registry.
 
 ## Verificações adicionais
 

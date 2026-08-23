@@ -2,7 +2,7 @@
 
 Router determinístico, declarativo e auditável para seleção de perfis especializados no projeto **Villaz-Lab**.
 
-> **Status:** Router determinístico v1 implementado e validado comportamentalmente. A `IMPLEMENTAÇÃO-001.08` publicou `decide_route()` e a `VALIDAÇÃO-001.09` executou com sucesso RT-001–RT-048 contra o runtime. Suíte atual: 228 testes. Próxima etapa: Dispatcher / Profile Registry.
+> **Status:** Router determinístico v1 implementado e validado comportamentalmente. A `VALIDAÇÃO-001.09` fechou o Router com 228 testes, e a `IMPLEMENTAÇÃO-002.02` implementou e validou tecnicamente o Profile Registry. Suíte atual: 333 testes. Próxima etapa: Dispatcher e validação de compatibilidade de runtime.
 
 ## Objetivos
 
@@ -56,11 +56,15 @@ Implementado e testado:
 - candidatos ambíguos canônicos por score decrescente e `route_id` crescente;
 - `RouteCandidate` e `RouteDecision` com invariantes de estado;
 - API pública `decide_route`;
-- suíte atual com 228 testes.
+- Profile Registry com `ProfileDefinition`, `ProfileRegistrySnapshot`, erros próprios, loader YAML, canonicalização e `registry_hash` determinístico;
+- APIs públicas do Registry exportadas pelo pacote `villaz_router`;
+- suíte atual com 333 testes.
 
 Próxima etapa planejada:
 
-- implementar Dispatcher / Profile Registry.
+- implementar o Dispatcher;
+- implementar `validate_runtime_compatibility()` entre Router e Profile Registry;
+- manter `profiles/profiles.yaml` oficial pendente até a definição de modelos e `system_prompt` operacionais reais.
 
 Depois virão FastAPI, integração com Ollama e a validação do fluxo vertical completo. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
 

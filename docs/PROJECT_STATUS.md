@@ -159,14 +159,35 @@ Validado:
 - suíte completa ao fechamento técnico: `228 passed`;
 - `git diff --check` aprovado.
 
+## IMPLEMENTAÇÃO-002.02 — Profile Registry — concluída tecnicamente
+
+Implementado e validado:
+
+- domínio de erros próprio com `RegistryErrorCode` e `RegistryError`;
+- `ProfileDefinition` imutável com IDs canônicos e strings obrigatórias sem normalização destrutiva;
+- `ProfileRegistrySnapshot` imutável, ordenado e com `profile_ids` derivados;
+- resolução exata por `get()`, `contains()` e `list_profiles()`;
+- canonicalização lógica independente da ordem física do YAML;
+- `registry_hash` SHA-256 determinístico conforme contrato aprovado;
+- loader próprio de `profiles/profiles.yaml`, sem reutilizar helpers privados do Router;
+- tradução de falhas em `INVALID_REGISTRY`, `INVALID_PROFILE_DEFINITION` e `DUPLICATE_PROFILE_ID`;
+- cobertura integrada loader → definição → canonicalização → snapshot;
+- exports públicos do Profile Registry pelo pacote `villaz_router`;
+- suíte completa corrente: `333 passed`;
+- `git diff --check` aprovado.
+
+Observação: o arquivo operacional oficial `profiles/profiles.yaml` ainda não foi criado. Sua criação depende de modelos e `system_prompt` reais, conforme decisão arquitetural já aprovada.
+
 ## Próxima etapa
 
-- Dispatcher / Profile Registry.
+- Dispatcher;
+- validação de compatibilidade de runtime entre Router e Profile Registry.
 
 ## Ainda não implementado
 
 - Dispatcher;
-- Profile Registry;
+- `validate_runtime_compatibility()`;
+- configuração operacional oficial `profiles/profiles.yaml`;
 - FastAPI;
 - Ollama;
 - Orchestrator.

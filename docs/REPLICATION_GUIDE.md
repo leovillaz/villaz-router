@@ -77,17 +77,19 @@ No estado atual, já estão concluídos:
 - gate de conflito entre Intents `route_capable`;
 - `RouteCandidate` e `RouteDecision`;
 - API pública `decide_route`;
-- suíte com 228 testes no checkpoint atual.
+- suíte corrente com 333 testes; o checkpoint histórico da `VALIDAÇÃO-001.09` permanece em 228 testes.
 
 ## Validação comportamental
 
-RT-001–RT-048 estão executados contra `decide_route()` e reconciliados. Os casos RT-045–RT-048 são repetidos 10 vezes cada para verificar determinismo. O baseline atual da suíte é `228 passed`.
+RT-001–RT-048 estão executados contra `decide_route()` e reconciliados. Os casos RT-045–RT-048 são repetidos 10 vezes cada para verificar determinismo. O Profile Registry está implementado e validado, e o baseline corrente da suíte é `333 passed`.
 
 ## O que ainda não deve ser esperado
 
 Ainda não estão concluídos:
 
-- Dispatcher / Profile Registry;
+- Dispatcher;
+- validação de compatibilidade de runtime entre Router e Profile Registry;
+- configuração operacional oficial `profiles/profiles.yaml`;
 - integração FastAPI;
 - integração Ollama.
 
