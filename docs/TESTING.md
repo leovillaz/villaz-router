@@ -8,7 +8,7 @@ python -m pytest -v
 
 ## Estado atual
 
-A suíte corrente possui **333 testes**. O checkpoint histórico `VALIDAÇÃO-001.09` permanece registrado com `228 passed`.
+A suíte corrente possui **384 testes**. O checkpoint histórico `VALIDAÇÃO-001.09` permanece registrado com `228 passed`, e o fechamento técnico do Profile Registry permanece historicamente registrado com `333 passed`.
 
 Cobertura atual:
 
@@ -87,6 +87,17 @@ Cobertura atual:
 - loader de `profiles/profiles.yaml` e classificação determinística de erros;
 - cobertura integrada loader → definição → canonicalização → snapshot;
 - exports públicos do Profile Registry.
+- contratos, imutabilidade e validações de `DispatchPlan`;
+- domínio próprio de erros do Dispatcher;
+- construção determinística de planos para estados `routed` e `explicit`;
+- rejeição de `ambiguous` e `unrouted` sem consulta ao Registry;
+- tradução de `PROFILE_NOT_FOUND` preservando a causa original;
+- rejeição de profiles desabilitados sem fallback;
+- tradução restrita de `ValidationError` na construção final do plano;
+- propagação de erros inesperados sem mascaramento;
+- determinismo de `build_dispatch_plan`;
+- exports públicos do Dispatcher;
+- proteção da direção arquitetural Router + Registry → Dispatcher.
 
 ## Matriz normativa
 
@@ -98,7 +109,7 @@ tests/regression/router_v1_cases.json
 
 Os testes atuais validam os 48 casos como artefato normativo: IDs, campos, seleção manual, perfil inválido e repetições de determinismo.
 
-O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão está implementado. RT-001–RT-048 são validados tanto como artefato normativo quanto comportamentalmente contra `decide_route()`. RT-045–RT-048 são executados 10 vezes cada para verificar determinismo. O Profile Registry também está implementado e validado. A próxima etapa técnica é o Dispatcher e a validação de compatibilidade de runtime entre Router e Registry.
+O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão está implementado. RT-001–RT-048 são validados tanto como artefato normativo quanto comportamentalmente contra `decide_route()`. RT-045–RT-048 são executados 10 vezes cada para verificar determinismo. Profile Registry e Dispatcher também estão implementados e validados. A próxima etapa técnica é a validação de compatibilidade de runtime entre Router e Registry.
 
 ## Verificações adicionais
 

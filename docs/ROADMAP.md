@@ -43,7 +43,7 @@
 Somente após o Router isolado e a matriz comportamental estarem validados:
 
 - [x] Profile Registry
-- [ ] Dispatcher
+- [x] Dispatcher
 - [ ] validação de compatibilidade Router ↔ Profile Registry
 - [ ] configuração operacional oficial `profiles/profiles.yaml` após definição de modelos e prompts
 - [ ] FastAPI

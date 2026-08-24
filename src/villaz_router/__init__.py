@@ -10,6 +10,9 @@ from villaz_router.config import (
     RouterSettings,
     ScoringConfig,
 )
+from villaz_router.dispatcher import build_dispatch_plan
+from villaz_router.dispatcher_errors import DispatcherError, DispatcherErrorCode
+from villaz_router.dispatcher_models import DispatchPlan
 from villaz_router.errors import RouterError, RouterErrorCode
 from villaz_router.matcher import match_evidence, match_evidence_set
 from villaz_router.registry_canonical import (
@@ -71,6 +74,10 @@ __all__ = [
     "compute_registry_hash",
     "create_profile_registry_snapshot",
     "compute_ruleset_hash",
+    "build_dispatch_plan",
+    "DispatcherError",
+    "DispatcherErrorCode",
+    "DispatchPlan",
     "decide_route",
     "create_ruleset_snapshot",
     "Domain",

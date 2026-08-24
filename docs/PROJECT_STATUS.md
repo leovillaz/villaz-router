@@ -34,12 +34,12 @@ Reconciliação entre a especificação consolidada e o repositório:
 ## Validação atual
 
 ```text
-228 passed
+384 passed
 ```
 
-A suíte atual comprova modelos, loader, validação semântica, invariantes, integridade da matriz, canonicalização, identidade SHA-256, criação determinística do `RulesetSnapshot`, normalização, matching, scoring, elegibilidade, qualificação estrutural de Routes e decisão determinística em runtime.
+A suíte corrente comprova Router, execução comportamental integral de RT-001–RT-048, Profile Registry e Dispatcher determinístico. Os checkpoints históricos mantêm seus respectivos totais de testes nas seções abaixo.
 
-A execução comportamental integral dos 48 casos RT permanece como próxima etapa.
+
 
 Ruleset oficial:
 
@@ -178,14 +178,34 @@ Implementado e validado:
 
 Observação: o arquivo operacional oficial `profiles/profiles.yaml` ainda não foi criado. Sua criação depende de modelos e `system_prompt` reais, conforme decisão arquitetural já aprovada.
 
+## IMPLEMENTAÇÃO-002.04 — Dispatcher — concluída tecnicamente
+
+Implementado e validado localmente:
+
+- domínio próprio `DispatcherErrorCode` / `DispatcherError`;
+- modelo imutável `DispatchPlan` com validação de estado, `route_id`, hash e campos obrigatórios;
+- API pura `build_dispatch_plan(decision, registry)`;
+- suporte somente aos estados `routed` e `explicit`;
+- rejeição imediata de `ambiguous` e `unrouted`, sem consulta ao Registry;
+- resolução exata do perfil pelo Profile Registry;
+- tradução exclusiva de `RegistryErrorCode.PROFILE_NOT_FOUND` para o domínio do Dispatcher, preservando `__cause__`;
+- perfil desabilitado tratado como erro, sem fallback;
+- `ValidationError` do `DispatchPlan` convertido somente na fronteira final para `INVALID_DISPATCH_PLAN`;
+- exceções inesperadas e erros não relacionados do Registry não são mascarados;
+- exports públicos `build_dispatch_plan`, `DispatchPlan`, `DispatcherError` e `DispatcherErrorCode`;
+- direção de dependências protegida: Router + Registry → Dispatcher;
+- testes específicos do Dispatcher: `51 passed`;
+- suíte completa corrente: `384 passed`;
+- `git diff --check` aprovado.
+
+O Dispatcher está validado localmente neste checkpoint e será publicado no commit de fechamento desta implementação.
+
 ## Próxima etapa
 
-- Dispatcher;
 - validação de compatibilidade de runtime entre Router e Profile Registry.
 
 ## Ainda não implementado
 
-- Dispatcher;
 - `validate_runtime_compatibility()`;
 - configuração operacional oficial `profiles/profiles.yaml`;
 - FastAPI;
