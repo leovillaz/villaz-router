@@ -2,7 +2,7 @@
 
 Router determinístico, declarativo e auditável para seleção de perfis especializados no projeto **Villaz-Lab**.
 
-> **Status:** Router determinístico v1, Profile Registry, Dispatcher e Runtime Compatibility Validator implementados e validados tecnicamente. A suíte corrente possui 411 testes. Próxima etapa: definição da configuração operacional dos profiles antes da integração com FastAPI e Ollama.
+> **Status:** Router determinístico v1, Profile Registry, Dispatcher, Runtime Compatibility Validator e configuração operacional dos profiles implementados e validados tecnicamente. A suíte corrente possui 412 testes. Próxima etapa: bootstrap da aplicação e integração com FastAPI e Ollama.
 
 ## Objetivos
 
@@ -58,6 +58,8 @@ Implementado e testado:
 - API pública `decide_route`;
 - Profile Registry com `ProfileDefinition`, `ProfileRegistrySnapshot`, erros próprios, loader YAML, canonicalização e `registry_hash` determinístico;
 - APIs públicas do Registry exportadas pelo pacote `villaz_router`;
+- configuração operacional oficial materializada em `profiles/profiles.yaml`, com cinco profiles habilitados, modelos base executáveis e `system_prompt` canônico no Registry;
+- catálogo operacional validado em compatibilidade 1:1 com o catálogo do Router;
 - Dispatcher determinístico com domínio próprio de erros, `DispatchPlan` imutável e API pública `build_dispatch_plan`;
 - tradução controlada de erros do Registry, rejeição de estados não despacháveis e ausência de fallback;
 - direção arquitetural protegida: Router + Registry → Dispatcher;
@@ -66,14 +68,13 @@ Implementado e testado:
 - domínio próprio de erros com `RuntimeCompatibilityError`, `RuntimeCompatibilityErrorCode` e `RuntimeCompatibilityReason`;
 - API pública `validate_runtime_compatibility()` exportada pelo pacote `villaz_router`;
 - Runtime Compatibility Validator sem dependência de Dispatcher, loaders, canonicalização, FastAPI, Ollama, filesystem ou rede;
-- suíte corrente com 411 testes.
+- suíte corrente com 412 testes.
 
 Próxima etapa planejada:
 
-- manter `profiles/profiles.yaml` oficial pendente até a definição de modelos e `system_prompt` operacionais reais;
-- definir a configuração operacional dos profiles antes do bootstrap da aplicação.
-
-Depois virão FastAPI, integração com Ollama e a validação do fluxo vertical completo. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
+- implementar o bootstrap da aplicação carregando Ruleset e Profile Registry e validando a compatibilidade de runtime antes de servir requisições;
+- integrar a camada HTTP com FastAPI e a execução dos modelos com Ollama, preservando a separação Router → Registry → Dispatcher → Runtime;
+- validar o fluxo vertical completo do prompt até a execução do profile selecionado. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
 
 ## Requisitos
 
@@ -116,6 +117,8 @@ villaz-router/
 │   ├── domains.yaml
 │   ├── intents.yaml
 │   └── routing.yaml
+├── profiles/
+│   └── profiles.yaml
 ├── src/
 │   └── villaz_router/
 ├── tests/
@@ -152,11 +155,15 @@ Router
 
 ## Perfis oficiais v1
 
-- `mobile-dev`
-- `unity-dev`
-- `docs-dev`
-- `fiscal-finance`
-- `code-review-security`
+| Profile | Modelo base | Enabled |
+| --- | --- | :---: |
+| `code-review-security` | `qwen2.5-coder:14b` | `true` |
+| `docs-dev` | `gemma3:12b` | `true` |
+| `fiscal-finance` | `qwen3:14b` | `true` |
+| `mobile-dev` | `qwen2.5-coder:14b` | `true` |
+| `unity-dev` | `qwen2.5-coder:14b` | `true` |
+
+A configuração operacional canônica está em `profiles/profiles.yaml`. O campo `system_prompt` do Profile Registry é a fonte normativa das instruções comportamentais de cada profile; aliases especializados existentes no Ollama não constituem uma segunda fonte de verdade.
 
 ## Precedência das rotas v1
 
