@@ -61,6 +61,12 @@ from villaz_router.models import (
 )
 from villaz_router.normalization import normalize_text
 from villaz_router.router import decide_route
+from villaz_router.runtime_compatibility import validate_runtime_compatibility
+from villaz_router.runtime_compatibility_errors import (
+    RuntimeCompatibilityError,
+    RuntimeCompatibilityErrorCode,
+    RuntimeCompatibilityReason,
+)
 from villaz_router.scoring import score_evidence_matches
 from villaz_router.validation import validate_ruleset_semantics
 
@@ -121,5 +127,9 @@ __all__ = [
     "load_ruleset_documents",
     "load_ruleset_snapshot",
     "load_profile_registry_snapshot",
+    "RuntimeCompatibilityError",
+    "RuntimeCompatibilityErrorCode",
+    "RuntimeCompatibilityReason",
+    "validate_runtime_compatibility",
     "validate_ruleset_semantics",
 ]

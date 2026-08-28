@@ -2,7 +2,7 @@
 
 Router determinístico, declarativo e auditável para seleção de perfis especializados no projeto **Villaz-Lab**.
 
-> **Status:** Router determinístico v1 validado comportamentalmente, Profile Registry publicado e Dispatcher implementado e validado tecnicamente. A suíte corrente possui 384 testes. Próxima etapa: validação de compatibilidade de runtime entre Router e Profile Registry.
+> **Status:** Router determinístico v1, Profile Registry, Dispatcher e Runtime Compatibility Validator implementados e validados tecnicamente. A suíte corrente possui 411 testes. Próxima etapa: definição da configuração operacional dos profiles antes da integração com FastAPI e Ollama.
 
 ## Objetivos
 
@@ -61,12 +61,17 @@ Implementado e testado:
 - Dispatcher determinístico com domínio próprio de erros, `DispatchPlan` imutável e API pública `build_dispatch_plan`;
 - tradução controlada de erros do Registry, rejeição de estados não despacháveis e ausência de fallback;
 - direção arquitetural protegida: Router + Registry → Dispatcher;
-- suíte corrente com 384 testes.
+- Runtime Compatibility Validator puro e determinístico entre `RulesetSnapshot` e `ProfileRegistrySnapshot`;
+- validação fail-fast de referência de Route, catálogo 1:1 Router ↔ Registry e estado `enabled`;
+- domínio próprio de erros com `RuntimeCompatibilityError`, `RuntimeCompatibilityErrorCode` e `RuntimeCompatibilityReason`;
+- API pública `validate_runtime_compatibility()` exportada pelo pacote `villaz_router`;
+- Runtime Compatibility Validator sem dependência de Dispatcher, loaders, canonicalização, FastAPI, Ollama, filesystem ou rede;
+- suíte corrente com 411 testes.
 
 Próxima etapa planejada:
 
-- implementar `validate_runtime_compatibility()` entre Router e Profile Registry;
-- manter `profiles/profiles.yaml` oficial pendente até a definição de modelos e `system_prompt` operacionais reais.
+- manter `profiles/profiles.yaml` oficial pendente até a definição de modelos e `system_prompt` operacionais reais;
+- definir a configuração operacional dos profiles antes do bootstrap da aplicação.
 
 Depois virão FastAPI, integração com Ollama e a validação do fluxo vertical completo. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
 
