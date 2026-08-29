@@ -2,7 +2,7 @@
 
 Router determinístico, declarativo e auditável para seleção de perfis especializados no projeto **Villaz-Lab**.
 
-> **Status:** Router determinístico v1, Profile Registry, Dispatcher, Runtime Compatibility Validator e configuração operacional dos profiles implementados e validados tecnicamente. A suíte corrente possui 412 testes. Próxima etapa: bootstrap da aplicação e integração com FastAPI e Ollama.
+> **Status:** Router determinístico v1, Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional dos profiles e Application Bootstrap implementados e validados tecnicamente. A suíte corrente possui 435 testes. Próxima etapa: integração com FastAPI e Ollama.
 
 ## Objetivos
 
@@ -68,13 +68,23 @@ Implementado e testado:
 - domínio próprio de erros com `RuntimeCompatibilityError`, `RuntimeCompatibilityErrorCode` e `RuntimeCompatibilityReason`;
 - API pública `validate_runtime_compatibility()` exportada pelo pacote `villaz_router`;
 - Runtime Compatibility Validator sem dependência de Dispatcher, loaders, canonicalização, FastAPI, Ollama, filesystem ou rede;
-- suíte corrente com 412 testes.
+- Application Bootstrap síncrono com API pública `bootstrap_runtime(configuration_root)`;
+- validação explícita e fail-fast da raiz de configuração;
+- carregamento sequencial Ruleset → Profile Registry → Runtime Compatibility;
+- `RuntimeContext` imutável contendo a raiz normalizada e exatamente os snapshots validados;
+- domínio próprio `ApplicationBootstrapError`, com estágio, código, mensagem e causa preservada;
+- ausência de estado global, fallback, retry, I/O de importação ou captura genérica de erros inesperados;
+- separação arquitetural preservada: futuros adaptadores FastAPI dependem do bootstrap, enquanto o bootstrap permanece independente de FastAPI, HTTP e Ollama;
+- APIs públicas `bootstrap_runtime`, `RuntimeContext`, `BootstrapStage`, `ApplicationBootstrapErrorCode` e `ApplicationBootstrapError`;
+- suíte corrente com 435 testes.
 
 Próxima etapa planejada:
 
-- implementar o bootstrap da aplicação carregando Ruleset e Profile Registry e validando a compatibilidade de runtime antes de servir requisições;
-- integrar a camada HTTP com FastAPI e a execução dos modelos com Ollama, preservando a separação Router → Registry → Dispatcher → Runtime;
-- validar o fluxo vertical completo do prompt até a execução do profile selecionado. Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
+- integrar a camada HTTP com FastAPI, chamando `bootstrap_runtime()` uma única vez no lifecycle da aplicação;
+- integrar a execução dos modelos com Ollama a partir do `DispatchPlan`, sem transferir ao runtime responsabilidades do Router, Registry ou Dispatcher;
+- validar o fluxo vertical completo do prompt até a execução do profile selecionado.
+
+Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
 
 ## Requisitos
 

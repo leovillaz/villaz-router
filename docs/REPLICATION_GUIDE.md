@@ -79,19 +79,21 @@ No estado atual, já estão concluídos:
 - API pública `decide_route`;
 - Profile Registry determinístico;
 - Dispatcher com `DispatchPlan` e API pública `build_dispatch_plan`;
-- suíte corrente com 384 testes; o checkpoint histórico da `VALIDAÇÃO-001.09` permanece em 228 testes.
+- Runtime Compatibility Validator entre Ruleset e Profile Registry;
+- configuração operacional oficial com cinco profiles habilitados;
+- Application Bootstrap com `bootstrap_runtime()` e `RuntimeContext` imutável;
+- suíte corrente com 435 testes; os checkpoints históricos da `VALIDAÇÃO-001.09` e do Dispatcher permanecem, respectivamente, em 228 e 384 testes.
 
 ## Validação comportamental
 
-RT-001–RT-048 estão executados contra `decide_route()` e reconciliados. Os casos RT-045–RT-048 são repetidos 10 vezes cada para verificar determinismo. Profile Registry e Dispatcher estão implementados e validados, e o baseline corrente da suíte é `384 passed`.
+RT-001–RT-048 estão executados contra `decide_route()` e reconciliados. Os casos RT-045–RT-048 são repetidos 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial e Application Bootstrap estão implementados e validados, e o baseline corrente da suíte é `435 passed`.
 
 ## O que ainda não deve ser esperado
 
 Ainda não estão concluídos:
 
-- validação de compatibilidade de runtime entre Router e Profile Registry;
-- configuração operacional oficial `profiles/profiles.yaml`;
-- integração FastAPI;
-- integração Ollama.
+- integração FastAPI e lifecycle da aplicação;
+- integração Ollama;
+- validação do fluxo vertical completo.
 
 Esses itens pertencem às próximas fases.

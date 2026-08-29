@@ -1,3 +1,11 @@
+from villaz_router.bootstrap import bootstrap_runtime
+from villaz_router.bootstrap_errors import (
+    ApplicationBootstrapError,
+    ApplicationBootstrapErrorCode,
+    BootstrapStage,
+)
+from villaz_router.bootstrap_models import RuntimeContext
+
 from villaz_router.canonical import (
     canonical_ruleset_bytes,
     canonical_ruleset_json,
@@ -71,6 +79,11 @@ from villaz_router.scoring import score_evidence_matches
 from villaz_router.validation import validate_ruleset_semantics
 
 __all__ = [
+    "ApplicationBootstrapError",
+    "ApplicationBootstrapErrorCode",
+    "BootstrapStage",
+    "RuntimeContext",
+    "bootstrap_runtime",
     "canonical_ruleset_bytes",
     "canonical_ruleset_json",
     "canonical_ruleset_payload",

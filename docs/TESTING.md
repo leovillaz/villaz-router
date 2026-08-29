@@ -3,12 +3,12 @@
 ## Execução
 
 ```bash
-python -m pytest -v
+.venv/bin/python -m pytest -v
 ```
 
 ## Estado atual
 
-A suíte corrente possui **384 testes**. O checkpoint histórico `VALIDAÇÃO-001.09` permanece registrado com `228 passed`, e o fechamento técnico do Profile Registry permanece historicamente registrado com `333 passed`.
+A suíte corrente possui **435 testes**. Permanecem preservados os baselines históricos de `228 passed` na `VALIDAÇÃO-001.09`, `333 passed` no Profile Registry, `384 passed` no Dispatcher, `411 passed` no Runtime Compatibility Validator e `412 passed` na configuração operacional oficial.
 
 Cobertura atual:
 
@@ -98,6 +98,26 @@ Cobertura atual:
 - determinismo de `build_dispatch_plan`;
 - exports públicos do Dispatcher;
 - proteção da direção arquitetural Router + Registry → Dispatcher.
+- domínio próprio e estruturado de erros do Runtime Compatibility Validator;
+- validação de referências de Routes antes da compatibilidade dos catálogos;
+- compatibilidade 1:1 entre os profiles do Ruleset e do Registry;
+- validação do estado `enabled` entre Ruleset e Registry;
+- ordem fail-fast determinística dos erros de compatibilidade;
+- configuração operacional oficial com cinco profiles habilitados;
+- modelos base e `system_prompt` canônico preservados no Profile Registry;
+- `registry_hash` oficial da configuração operacional;
+- contratos exatos de `BootstrapStage` e `ApplicationBootstrapErrorCode`;
+- atributos, representação textual e independência de `ApplicationBootstrapError`;
+- campos exatos, imutabilidade e identidade dos snapshots em `RuntimeContext`;
+- raiz obrigatória, existente, diretório, legível e normalizada;
+- ordem Ruleset → Registry → Runtime Compatibility → Context;
+- interrupção do bootstrap na primeira falha;
+- preservação de `cause` e `__cause__` dos erros especializados;
+- propagação de erros inesperados sem mascaramento;
+- ausência de estado global, retry, fallback e contexto parcial;
+- exports públicos do Application Bootstrap;
+- bootstrap integrado da configuração operacional oficial;
+- independência de FastAPI, HTTP, Ollama e rede.
 
 ## Matriz normativa
 
@@ -109,12 +129,12 @@ tests/regression/router_v1_cases.json
 
 Os testes atuais validam os 48 casos como artefato normativo: IDs, campos, seleção manual, perfil inválido e repetições de determinismo.
 
-O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão está implementado. RT-001–RT-048 são validados tanto como artefato normativo quanto comportamentalmente contra `decide_route()`. RT-045–RT-048 são executados 10 vezes cada para verificar determinismo. Profile Registry e Dispatcher também estão implementados e validados. A próxima etapa técnica é a validação de compatibilidade de runtime entre Router e Registry.
+O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão está implementado. RT-001–RT-048 são validados tanto como artefato normativo quanto comportamentalmente contra `decide_route()`. RT-045–RT-048 são executados 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial e Application Bootstrap também estão implementados e validados. As próximas etapas técnicas são a integração com FastAPI, a execução com Ollama e a validação do fluxo vertical completo.
 
 ## Verificações adicionais
 
 ```bash
-python -m compileall -q src tests
+.venv/bin/python -m compileall -q src tests
 git diff --check
 ```
 
