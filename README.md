@@ -2,7 +2,7 @@
 
 Router determinístico, declarativo e auditável para seleção de perfis especializados no projeto **Villaz-Lab**.
 
-> **Status:** Router determinístico v1, Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional dos profiles e Application Bootstrap implementados e validados tecnicamente. A suíte corrente possui 435 testes. Próxima etapa: integração com FastAPI e Ollama.
+> **Status:** Router determinístico v1, Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional dos profiles, Application Bootstrap e FastAPI Application Shell implementados e validados tecnicamente. A suíte corrente possui 480 testes. Próxima etapa: integração com Ollama e especificação do fluxo HTTP funcional.
 
 ## Objetivos
 
@@ -74,15 +74,25 @@ Implementado e testado:
 - `RuntimeContext` imutável contendo a raiz normalizada e exatamente os snapshots validados;
 - domínio próprio `ApplicationBootstrapError`, com estágio, código, mensagem e causa preservada;
 - ausência de estado global, fallback, retry, I/O de importação ou captura genérica de erros inesperados;
-- separação arquitetural preservada: futuros adaptadores FastAPI dependem do bootstrap, enquanto o bootstrap permanece independente de FastAPI, HTTP e Ollama;
+- separação arquitetural preservada: o adaptador FastAPI depende do bootstrap, enquanto o bootstrap permanece independente de FastAPI, HTTP e Ollama;
 - APIs públicas `bootstrap_runtime`, `RuntimeContext`, `BootstrapStage`, `ApplicationBootstrapErrorCode` e `ApplicationBootstrapError`;
-- suíte corrente com 435 testes.
+- FastAPI Application Shell isolado em `villaz_router.http_api`;
+- factory pública `create_app(configuration_root)`, sem singleton global, bootstrap ou I/O durante sua criação;
+- lifespan moderno executando `bootstrap_runtime()` exatamente uma vez por ciclo e antes de servir requisições;
+- `RuntimeContext` publicado por identidade em `app.state.runtime_context` e removido no encerramento;
+- dependency pública e tipada `get_runtime_context(request)`;
+- endpoints mínimos `GET /health/live` e `GET /health/ready`, com respostas não sensíveis;
+- OpenAPI, Swagger UI e ReDoc explicitamente desabilitados;
+- proteção arquitetural entre núcleo, Application Bootstrap e adaptador HTTP;
+- FastAPI `0.141.1` e HTTPX2 `2.12.0` com versões fixadas;
+- 45 testes específicos da camada HTTP;
+- suíte corrente com 480 testes.
 
 Próxima etapa planejada:
 
-- integrar a camada HTTP com FastAPI, chamando `bootstrap_runtime()` uma única vez no lifecycle da aplicação;
-- integrar a execução dos modelos com Ollama a partir do `DispatchPlan`, sem transferir ao runtime responsabilidades do Router, Registry ou Dispatcher;
-- validar o fluxo vertical completo do prompt até a execução do profile selecionado.
+- especificar e implementar a execução com Ollama a partir do `DispatchPlan`;
+- especificar o endpoint HTTP funcional somente após definir seus contratos de segurança, erros e exposição;
+- validar o fluxo vertical completo API → Router → Dispatcher/Profile Registry → Ollama.
 
 Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
 

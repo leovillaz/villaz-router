@@ -34,10 +34,10 @@ Reconciliação entre a especificação consolidada e o repositório:
 ## Validação atual
 
 ```text
-435 passed
+480 passed
 ```
 
-A suíte corrente comprova Router, execução comportamental integral de RT-001–RT-048, Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial e Application Bootstrap determinístico. Os checkpoints históricos mantêm seus respectivos totais de testes nas seções abaixo.
+A suíte corrente comprova Router, execução comportamental integral de RT-001–RT-048, Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap determinístico e FastAPI Application Shell com lifecycle fail-fast. Os checkpoints históricos mantêm seus respectivos totais de testes nas seções abaixo.
 
 
 
@@ -229,7 +229,7 @@ Implementado e validado:
 - suíte completa ao fechamento: `412 passed`;
 - commit publicado: `cc87f0b79380f77c3dafd8804b5e547e9580538a`.
 
-## IMPLEMENTAÇÃO-002.07 — Application Bootstrap — concluída tecnicamente
+## IMPLEMENTAÇÃO-002.07 — Application Bootstrap — concluída e publicada
 
 Implementado e validado:
 
@@ -246,18 +246,48 @@ Implementado e validado:
 - exports públicos do bootstrap;
 - teste integrado com a configuração operacional oficial;
 - 23 novos testes;
-- suíte completa corrente: `435 passed`;
+- suíte completa no fechamento: `435 passed`;
+- commit publicado: `77643dbd2b7d624f6929514e4858bbd1c0e36cb9`.
 - `git diff --check` aprovado.
+
+## IMPLEMENTAÇÃO-002.08 — FastAPI Application Shell e Lifecycle — concluída tecnicamente
+
+Implementado e validado localmente:
+
+- adaptador HTTP isolado em `villaz_router.http_api`;
+- API pública `create_app(configuration_root)` sem argumento padrão;
+- factory sem bootstrap, I/O ou singleton global;
+- lifespan moderno executando `bootstrap_runtime()` uma vez por ciclo;
+- `RuntimeContext` publicado por identidade em `app.state.runtime_context`;
+- remoção do contexto em `finally` após o encerramento;
+- API pública e tipada `get_runtime_context(request)`;
+- invariants explícitas para contexto ausente ou de tipo incorreto;
+- endpoints públicos mínimos `GET /health/live` e `GET /health/ready`;
+- respostas exatas e sem exposição de configuração operacional;
+- OpenAPI, Swagger UI e ReDoc desabilitados;
+- startup fail-fast, sem retry, fallback ou estado parcial;
+- proteção da direção FastAPI → Application Bootstrap → domínio;
+- ausência de dependência HTTP no núcleo publicado;
+- ausência de Uvicorn, Ollama, Dispatcher em runtime HTTP e endpoint funcional de prompts;
+- dependências fixadas em FastAPI `0.141.1` e HTTPX2 `2.12.0`;
+- `pip check` sem requisitos quebrados;
+- 45 novos testes unitários, arquiteturais e integrados;
+- suíte completa corrente: `480 passed`;
+- `git diff --check` aprovado.
+
+Os resultados acima constituem o fechamento técnico desta etapa.
 
 ## Próxima etapa
 
-- integrar FastAPI e seu lifecycle ao `RuntimeContext`;
-- integrar a execução dos modelos com Ollama a partir do `DispatchPlan`;
+- especificar e implementar a execução com Ollama a partir do `DispatchPlan`;
+- especificar posteriormente o endpoint HTTP funcional e seus contratos de segurança e erros;
 - validar o fluxo vertical API → Router → Dispatcher/Profile Registry → Ollama.
 
 ## Ainda não implementado
 
-- FastAPI;
-- integração Ollama;
+- cliente e execução Ollama;
+- endpoint HTTP funcional para prompts;
+- autenticação, autorização e tratamento HTTP funcional;
+- servidor ASGI e deployment;
 - fluxo vertical completo;
 - Orchestrator.

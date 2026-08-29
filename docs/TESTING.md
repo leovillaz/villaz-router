@@ -8,7 +8,7 @@
 
 ## Estado atual
 
-A suíte corrente possui **435 testes**. Permanecem preservados os baselines históricos de `228 passed` na `VALIDAÇÃO-001.09`, `333 passed` no Profile Registry, `384 passed` no Dispatcher, `411 passed` no Runtime Compatibility Validator e `412 passed` na configuração operacional oficial.
+A suíte corrente possui **480 testes**. Permanecem preservados os baselines históricos de `228 passed` na `VALIDAÇÃO-001.09`, `333 passed` no Profile Registry, `384 passed` no Dispatcher, `411 passed` no Runtime Compatibility Validator, `412 passed` na configuração operacional oficial e `435 passed` no Application Bootstrap.
 
 Cobertura atual:
 
@@ -118,6 +118,28 @@ Cobertura atual:
 - exports públicos do Application Bootstrap;
 - bootstrap integrado da configuração operacional oficial;
 - independência de FastAPI, HTTP, Ollama e rede.
+- contratos estritos e imutáveis de `LivenessResponse` e `ReadinessResponse`;
+- factory síncrona `create_app(configuration_root)` sem bootstrap durante sua criação;
+- ausência de singleton global da aplicação;
+- lifespan executando o Application Bootstrap exatamente uma vez por ciclo;
+- publicação e remoção do `RuntimeContext` em `app.state.runtime_context`;
+- preservação da identidade do contexto;
+- ciclos de lifespan e aplicações independentes;
+- dependency tipada `get_runtime_context(request)`;
+- erros exatos para contexto ausente ou de tipo incorreto;
+- liveness independente do contexto de runtime;
+- readiness dependente exclusivamente do contexto tipado;
+- respostas exatas e não sensíveis dos endpoints de health;
+- rejeição de métodos inválidos e caminhos desconhecidos;
+- OpenAPI, Swagger UI e ReDoc desabilitados;
+- propagação de falhas de bootstrap sem mascaramento;
+- proteção arquitetural FastAPI → Application Bootstrap → domínio;
+- ausência de loaders, validator, Dispatcher, Ollama, Uvicorn e subprocessos na camada HTTP;
+- exports públicos exatos de `villaz_router.http_api`;
+- integração da FastAPI Application Shell com a configuração operacional oficial;
+- FastAPI `0.141.1` e HTTPX2 `2.12.0`;
+- `pip check` sem requisitos quebrados;
+- 45 testes específicos da camada HTTP.
 
 ## Matriz normativa
 
@@ -129,7 +151,7 @@ tests/regression/router_v1_cases.json
 
 Os testes atuais validam os 48 casos como artefato normativo: IDs, campos, seleção manual, perfil inválido e repetições de determinismo.
 
-O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão está implementado. RT-001–RT-048 são validados tanto como artefato normativo quanto comportamentalmente contra `decide_route()`. RT-045–RT-048 são executados 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial e Application Bootstrap também estão implementados e validados. As próximas etapas técnicas são a integração com FastAPI, a execução com Ollama e a validação do fluxo vertical completo.
+O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão está implementado. RT-001–RT-048 são validados tanto como artefato normativo quanto comportamentalmente contra `decide_route()`. RT-045–RT-048 são executados 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap e FastAPI Application Shell também estão implementados e validados. As próximas etapas técnicas são a execução com Ollama, a especificação do endpoint HTTP funcional e a validação do fluxo vertical completo.
 
 ## Verificações adicionais
 

@@ -82,18 +82,21 @@ No estado atual, já estão concluídos:
 - Runtime Compatibility Validator entre Ruleset e Profile Registry;
 - configuração operacional oficial com cinco profiles habilitados;
 - Application Bootstrap com `bootstrap_runtime()` e `RuntimeContext` imutável;
-- suíte corrente com 435 testes; os checkpoints históricos da `VALIDAÇÃO-001.09` e do Dispatcher permanecem, respectivamente, em 228 e 384 testes.
+- FastAPI Application Shell com `create_app()`, lifecycle fail-fast e health probes;
+- suíte corrente com 480 testes; os checkpoints históricos da `VALIDAÇÃO-001.09`, do Dispatcher e do Application Bootstrap permanecem, respectivamente, em 228, 384 e 435 testes.
 
 ## Validação comportamental
 
-RT-001–RT-048 estão executados contra `decide_route()` e reconciliados. Os casos RT-045–RT-048 são repetidos 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial e Application Bootstrap estão implementados e validados, e o baseline corrente da suíte é `435 passed`.
+RT-001–RT-048 estão executados contra `decide_route()` e reconciliados. Os casos RT-045–RT-048 são repetidos 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap e FastAPI Application Shell estão implementados e validados, e o baseline corrente da suíte é `480 passed`.
 
 ## O que ainda não deve ser esperado
 
 Ainda não estão concluídos:
 
-- integração FastAPI e lifecycle da aplicação;
-- integração Ollama;
+- cliente e execução Ollama;
+- endpoint HTTP funcional para prompts;
+- autenticação, autorização e tratamento HTTP funcional;
+- servidor ASGI e deployment;
 - validação do fluxo vertical completo.
 
 Esses itens pertencem às próximas fases.

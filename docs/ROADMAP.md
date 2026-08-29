@@ -47,7 +47,7 @@ Somente após o Router isolado e a matriz comportamental estarem validados:
 - [x] validação de compatibilidade Router ↔ Profile Registry
 - [x] configuração operacional oficial `profiles/profiles.yaml`
 - [x] Application Bootstrap com `RuntimeContext` imutável e startup fail-fast
-- [ ] FastAPI e lifecycle da aplicação
+- [x] FastAPI Application Shell, lifecycle e health probes
 - [ ] integração com Ollama
 - [ ] validar o fluxo API → Router → Dispatcher/Profile Registry → Ollama
 
