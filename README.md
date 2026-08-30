@@ -2,7 +2,7 @@
 
 Router determinístico, declarativo e auditável para seleção de perfis especializados no projeto **Villaz-Lab**.
 
-> **Status:** Router determinístico v1, Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional dos profiles, Application Bootstrap e FastAPI Application Shell implementados e validados tecnicamente. A suíte corrente possui 480 testes. Próxima etapa: integração com Ollama e especificação do fluxo HTTP funcional.
+> **Status:** Router determinístico v1, Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional dos profiles, Application Bootstrap, FastAPI Application Shell e Ollama Execution implementados e validados tecnicamente. A suíte completa corrente possui 707 testes aprovados. Próxima etapa funcional: integração HTTP completa API → Router → Dispatcher/Profile Registry → Ollama.
 
 ## Objetivos
 
@@ -86,13 +86,14 @@ Implementado e testado:
 - proteção arquitetural entre núcleo, Application Bootstrap e adaptador HTTP;
 - FastAPI `0.141.1` e HTTPX2 `2.12.0` com versões fixadas;
 - 45 testes específicos da camada HTTP;
-- suíte corrente com 480 testes.
+- suíte corrente com 707 testes.
 
 Próxima etapa planejada:
 
-- especificar e implementar a execução com Ollama a partir do `DispatchPlan`;
-- especificar o endpoint HTTP funcional somente após definir seus contratos de segurança, erros e exposição;
-- validar o fluxo vertical completo API → Router → Dispatcher/Profile Registry → Ollama.
+- concluir o gate final da IMPLEMENTAÇÃO-002.09 e registrar o novo baseline da suíte completa;
+- especificar e implementar o endpoint HTTP funcional para prompts;
+- validar o fluxo vertical completo API → Router → Dispatcher/Profile Registry → Ollama;
+- preparar posteriormente o Public Release Hardening antes da abertura do repositório.
 
 Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
 

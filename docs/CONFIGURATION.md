@@ -100,3 +100,77 @@ O JSON canônico usa:
 - rejeição de valores numéricos não JSON como `NaN`.
 
 O `RulesetSnapshot` inclui o hash lógico, a configuração efetiva do Router e todas as estruturas do ruleset em ordem canônica.
+
+## Configuração da Ollama Execution
+
+A camada `villaz_router.ollama_execution` possui configuração própria e explícita por meio de três modelos imutáveis:
+
+- `OllamaClientConfig`;
+- `OllamaTimeoutConfig`;
+- `OllamaConnectionLimits`.
+
+Nenhum desses modelos define valores default. Todos os campos necessários devem ser informados explicitamente pela camada que construir o executor.
+
+### `OllamaClientConfig`
+
+Campos obrigatórios:
+
+- `base_url`: URL base do servidor Ollama;
+- `timeouts`: instância de `OllamaTimeoutConfig`;
+- `limits`: instância de `OllamaConnectionLimits`.
+
+`base_url` aceita somente os esquemas `http` e `https` e deve conter um host válido.
+
+A URL não pode conter:
+
+- credenciais embutidas;
+- query string;
+- fragment;
+- whitespace;
+- caminho de operação.
+
+Assim, a URL representa somente a raiz do servidor. O endpoint operacional `/api/generate` é responsabilidade interna do transporte.
+
+### `OllamaTimeoutConfig`
+
+Campos obrigatórios:
+
+- `connect_seconds`;
+- `read_seconds`;
+- `write_seconds`;
+- `pool_seconds`.
+
+Todos devem ser valores `float` estritos, finitos e maiores que zero.
+
+### `OllamaConnectionLimits`
+
+Campos obrigatórios:
+
+- `max_connections`;
+- `max_keepalive_connections`;
+- `keepalive_expiry_seconds`.
+
+Regras:
+
+- `max_connections` deve ser inteiro estrito maior que zero;
+- `max_keepalive_connections` deve ser inteiro estrito maior ou igual a zero;
+- `max_keepalive_connections` não pode exceder `max_connections`;
+- `keepalive_expiry_seconds` deve ser `float` estrito, finito e maior que zero.
+
+### Factory oficial
+
+`create_ollama_executor(config)` transforma a configuração em um `OllamaExecutor` usando HTTPX2.
+
+A factory configura explicitamente:
+
+- HTTP/1.1 habilitado;
+- HTTP/2 desabilitado;
+- `trust_env=False`;
+- redirects desabilitados;
+- retries igual a zero;
+- timeouts explícitos;
+- limites explícitos de conexão.
+
+A criação do executor não realiza conexão de rede. A rede somente pode ser utilizada posteriormente durante uma chamada explícita de execução.
+
+A configuração da Ollama Execution não pertence a `config/router.yaml` e não altera o ruleset determinístico.

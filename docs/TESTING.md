@@ -8,7 +8,7 @@
 
 ## Estado atual
 
-A suíte corrente possui **480 testes**. Permanecem preservados os baselines históricos de `228 passed` na `VALIDAÇÃO-001.09`, `333 passed` no Profile Registry, `384 passed` no Dispatcher, `411 passed` no Runtime Compatibility Validator, `412 passed` na configuração operacional oficial e `435 passed` no Application Bootstrap.
+A suíte corrente possui **707 testes**. Permanecem preservados os baselines históricos de `228 passed` na `VALIDAÇÃO-001.09`, `333 passed` no Profile Registry, `384 passed` no Dispatcher, `411 passed` no Runtime Compatibility Validator, `412 passed` na configuração operacional oficial e `435 passed` no Application Bootstrap.
 
 Cobertura atual:
 
@@ -141,6 +141,50 @@ Cobertura atual:
 - `pip check` sem requisitos quebrados;
 - 45 testes específicos da camada HTTP.
 
+## Cobertura da Ollama Execution
+
+A IMPLEMENTAÇÃO-002.09 adiciona cobertura específica para a camada `villaz_router.ollama_execution`.
+
+Os testes cobrem:
+
+- contratos estritos e imutáveis de `OllamaTimeoutConfig`, `OllamaConnectionLimits` e `OllamaClientConfig`;
+- rejeição de campos extras e tipos incompatíveis;
+- validação explícita de URL base, incluindo esquema, host, credenciais, query, fragment, whitespace e path operacional;
+- coerência dos limites de conexão;
+- contratos de `OllamaExecutionRequest` e `OllamaExecutionResult`;
+- preservação por identidade do `DispatchPlan`;
+- preservação exata de `model`, `system_prompt` e prompt do usuário;
+- domínio próprio de erros de execução e transporte;
+- protocolo assíncrono e injetável `OllamaTransport`;
+- payload exato para `POST /api/generate`;
+- `stream=false`, `raw=false` e `think=false`;
+- tradução restrita de erros esperados;
+- propagação de cancelamento e exceções inesperadas sem mascaramento;
+- validação fail-fast de respostas inválidas;
+- lifecycle e fechamento idempotente do executor;
+- rejeição de execução após fechamento;
+- transporte HTTPX2 assíncrono;
+- HTTP/1.1 habilitado e HTTP/2 desabilitado;
+- `trust_env=False`;
+- redirects desabilitados;
+- retries igual a zero;
+- limites explícitos de conexão e keep-alive;
+- rejeição de respostas HTTP não 2xx;
+- rejeição de JSON inválido;
+- factory `create_ollama_executor(config)` sem rede durante construção;
+- superfície pública exata do subpacote `ollama_execution`;
+- `Httpx2OllamaTransport` mantido como detalhe interno;
+- ausência de símbolos Ollama no pacote raiz `villaz_router`;
+- ausência de dependência Ollama no core, Dispatcher, bootstrap e FastAPI Application Shell;
+- ausência de endpoints Ollama adicionais além de `/api/generate`;
+- dependência HTTPX2 somente nas camadas de infraestrutura previstas;
+- integração oficial Bootstrap → Router → Dispatcher/Profile Registry → Ollama Execution com transporte falso;
+- execução do teste de integração sem TCP, servidor Ollama, GPU ou internet.
+
+O teste oficial de integração utiliza um caso determinístico real da matriz normativa (`RT-017`) e valida que o prompt original do usuário permanece separado do `system_prompt`.
+
+A suíte específica da IMPLEMENTAÇÃO-002.09 foi aprovada com `227 passed in 0.63s`. A suíte completa foi aprovada posteriormente com `707 passed in 2.07s`, estabelecendo o novo baseline corrente do projeto.
+
 ## Matriz normativa
 
 A matriz aprovada está em:
@@ -151,7 +195,7 @@ tests/regression/router_v1_cases.json
 
 Os testes atuais validam os 48 casos como artefato normativo: IDs, campos, seleção manual, perfil inválido e repetições de determinismo.
 
-O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão está implementado. RT-001–RT-048 são validados tanto como artefato normativo quanto comportamentalmente contra `decide_route()`. RT-045–RT-048 são executados 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap e FastAPI Application Shell também estão implementados e validados. As próximas etapas técnicas são a execução com Ollama, a especificação do endpoint HTTP funcional e a validação do fluxo vertical completo.
+O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão está implementado. RT-001–RT-048 são validados tanto como artefato normativo quanto comportamentalmente contra `decide_route()`. RT-045–RT-048 são executados 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap, FastAPI Application Shell e Ollama Execution também estão implementados e validados localmente. A próxima etapa funcional é a integração HTTP completa API → Router → Dispatcher/Profile Registry → Ollama.
 
 ## Verificações adicionais
 

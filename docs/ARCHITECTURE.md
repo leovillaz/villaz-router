@@ -32,6 +32,9 @@ Router
 Dispatcher / Profile Registry
  |
  v
+Ollama Execution
+ |
+ v
 Ollama
 ```
 
@@ -104,6 +107,52 @@ Regras:
 - `ambiguous` e `unrouted` exigem `profile = null`;
 - não há fallback genérico;
 - ambiguidade é resultado legítimo.
+
+## Ollama Execution
+
+A execução com Ollama pertence a uma camada de integração isolada no subpacote `villaz_router.ollama_execution`. Ela não participa da decisão de roteamento e não introduz dependência de Ollama, HTTPX2 ou rede no núcleo determinístico.
+
+A entrada da camada é `OllamaExecutionRequest`, formada por um `DispatchPlan` válido e pelo prompt do usuário mantido separadamente.
+
+As fontes normativas do payload são:
+
+- `DispatchPlan.model` → `model`;
+- `DispatchPlan.system_prompt` → `system`;
+- `OllamaExecutionRequest.user_prompt` → `prompt`.
+
+A camada não concatena, prefixa ou normaliza `system_prompt` e prompt do usuário.
+
+A única operação Ollama suportada na v1 é `POST /api/generate`, com os campos exatos `model`, `system`, `prompt`, `stream=false`, `raw=false` e `think=false`.
+
+`OllamaExecutor` depende somente do protocolo injetável `OllamaTransport`. A implementação concreta baseada em HTTPX2 permanece interna, permitindo testes com transporte falso sem TCP, Ollama, GPU ou internet.
+
+A construção do executor não realiza rede, preflight, inventário de modelos, preload, download, heartbeat ou polling. A camada também não implementa retry, fallback, persistência automática, shell ou subprocessos.
+
+O FastAPI Application Shell ainda não executa prompts. O fluxo HTTP funcional até Ollama permanece uma integração posterior.
+
+O fluxo já validado de forma hermética é:
+
+    bootstrap_runtime()
+        ↓
+    RouteRequest
+        ↓
+    decide_route()
+        ↓
+    RouteDecision
+        ↓
+    build_dispatch_plan()
+        ↓
+    DispatchPlan
+        ↓
+    OllamaExecutionRequest
+        ↓
+    OllamaExecutor
+        ↓
+    OllamaTransport falso
+        ↓
+    OllamaExecutionResult
+
+Esse teste usa a configuração operacional oficial, mas não realiza conexão de rede.
 
 ## Determinismo
 

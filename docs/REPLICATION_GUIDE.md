@@ -83,17 +83,21 @@ No estado atual, já estão concluídos:
 - configuração operacional oficial com cinco profiles habilitados;
 - Application Bootstrap com `bootstrap_runtime()` e `RuntimeContext` imutável;
 - FastAPI Application Shell com `create_app()`, lifecycle fail-fast e health probes;
-- suíte corrente com 480 testes; os checkpoints históricos da `VALIDAÇÃO-001.09`, do Dispatcher e do Application Bootstrap permanecem, respectivamente, em 228, 384 e 435 testes.
+- Ollama Execution assíncrona e injetável em `villaz_router.ollama_execution`;
+- configuração explícita por `OllamaClientConfig`, `OllamaTimeoutConfig` e `OllamaConnectionLimits`;
+- `OllamaExecutor` com transporte abstrato `OllamaTransport`;
+- implementação HTTPX2 interna para `POST /api/generate`;
+- integração oficial Bootstrap → Router → Dispatcher/Profile Registry → Ollama Execution validada com transporte falso e sem rede;
+- suíte corrente com 707 testes; os checkpoints históricos da `VALIDAÇÃO-001.09`, do Dispatcher e do Application Bootstrap permanecem, respectivamente, em 228, 384 e 435 testes.
 
 ## Validação comportamental
 
-RT-001–RT-048 estão executados contra `decide_route()` e reconciliados. Os casos RT-045–RT-048 são repetidos 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap e FastAPI Application Shell estão implementados e validados, e o baseline corrente da suíte é `480 passed`.
+RT-001–RT-048 estão executados contra `decide_route()` e reconciliados. Os casos RT-045–RT-048 são repetidos 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap, FastAPI Application Shell e Ollama Execution estão implementados e validados. O fluxo integrado com `RT-017` também está validado localmente com transporte falso e sem rede. O baseline corrente da suíte completa é `707 passed`.
 
 ## O que ainda não deve ser esperado
 
 Ainda não estão concluídos:
 
-- cliente e execução Ollama;
 - endpoint HTTP funcional para prompts;
 - autenticação, autorização e tratamento HTTP funcional;
 - servidor ASGI e deployment;

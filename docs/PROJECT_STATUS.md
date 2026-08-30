@@ -34,7 +34,7 @@ Reconciliação entre a especificação consolidada e o repositório:
 ## Validação atual
 
 ```text
-480 passed
+707 passed
 ```
 
 A suíte corrente comprova Router, execução comportamental integral de RT-001–RT-048, Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap determinístico e FastAPI Application Shell com lifecycle fail-fast. Os checkpoints históricos mantêm seus respectivos totais de testes nas seções abaixo.
@@ -277,17 +277,57 @@ Implementado e validado localmente:
 
 Os resultados acima constituem o fechamento técnico desta etapa.
 
+## IMPLEMENTAÇÃO-002.09 — Ollama Execution — concluída tecnicamente localmente
+
+Implementado e validado localmente:
+
+- subpacote isolado `villaz_router.ollama_execution`;
+- configuração explícita e imutável por `OllamaClientConfig`, `OllamaTimeoutConfig` e `OllamaConnectionLimits`;
+- request e result próprios por `OllamaExecutionRequest` e `OllamaExecutionResult`;
+- domínio próprio e estruturado de erros de execução e transporte;
+- protocolo assíncrono e injetável `OllamaTransport`;
+- `OllamaExecutor` assíncrono com lifecycle próprio e fechamento idempotente;
+- payload exato para `POST /api/generate`;
+- uso exclusivo de `DispatchPlan.model`, `DispatchPlan.system_prompt` e `OllamaExecutionRequest.user_prompt`;
+- preservação da separação entre system prompt e prompt do usuário;
+- `stream=false`, `raw=false` e `think=false`;
+- ausência de fallback, retry, preflight, heartbeat, inventário, preload, pull ou download de modelos;
+- ausência de logging, telemetria, persistência, shell ou subprocessos na camada;
+- implementação concreta interna `Httpx2OllamaTransport`;
+- HTTPX2 `2.12.0` como dependência de runtime;
+- AnyIO `4.14.2` como dependência de desenvolvimento/teste;
+- HTTP/1.1 habilitado e HTTP/2 desabilitado;
+- `trust_env=False`;
+- redirects desabilitados;
+- retries igual a zero;
+- limites explícitos de conexão e keep-alive;
+- factory pública `create_ollama_executor(config)` sem rede durante construção;
+- superfície pública exata do subpacote Ollama Execution;
+- ausência de símbolos Ollama no pacote raiz `villaz_router`;
+- ausência de dependência Ollama no Router, Dispatcher, Application Bootstrap e FastAPI Application Shell;
+- proteção arquitetural contra endpoints adicionais além de `/api/generate`;
+- teste integrado oficial Bootstrap → Router → Dispatcher/Profile Registry → Ollama Execution;
+- uso do caso normativo `RT-017` no teste de integração;
+- transporte falso utilizado no fluxo integrado, sem TCP, servidor Ollama, GPU ou internet;
+- teste isolado oficial do fluxo integrado aprovado com `1 passed`.
+
+A integração HTTP funcional ainda não faz parte desta implementação. O FastAPI Application Shell permanece sem endpoint de prompts.
+
+A suíte completa da IMPLEMENTAÇÃO-002.09 foi aprovada com `707 passed` em `2.07s`, estabelecendo o novo baseline corrente do projeto.
+
+O fechamento documental, `compileall`, `pip check`, testes específicos, suíte completa, revisão final de diff e publicação Git pertencem ao Bloco 7 desta implementação.
+
 ## Próxima etapa
 
-- especificar e implementar a execução com Ollama a partir do `DispatchPlan`;
-- especificar posteriormente o endpoint HTTP funcional e seus contratos de segurança e erros;
-- validar o fluxo vertical API → Router → Dispatcher/Profile Registry → Ollama.
+- concluir o Bloco 7 da IMPLEMENTAÇÃO-002.09 com documentação, gates finais e publicação Git;
+- especificar e implementar posteriormente o endpoint HTTP funcional para prompts;
+- validar o fluxo vertical completo API → Router → Dispatcher/Profile Registry → Ollama.
 
 ## Ainda não implementado
 
-- cliente e execução Ollama;
 - endpoint HTTP funcional para prompts;
 - autenticação, autorização e tratamento HTTP funcional;
 - servidor ASGI e deployment;
-- fluxo vertical completo;
-- Orchestrator.
+- fluxo vertical completo API → Router → Dispatcher/Profile Registry → Ollama;
+- Orchestrator;
+- Villaz CLI / Villaz Terminal.
