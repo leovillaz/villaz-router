@@ -36,6 +36,32 @@ OllamaExecutionRequest / OllamaExecutor
 HTTP / PromptResponse
 ```
 
+## Entrypoint e configuração de runtime
+
+Os entrypoints `villaz-router serve` e
+`python -m villaz_router serve` convergem para a mesma função principal.
+A CLI resolve explicitamente uma raiz de configuração e entrega a aplicação
+criada por `create_app(configuration_root)` ao Uvicorn.
+
+Sem override, a raiz vem somente dos package resources em
+`villaz_router.runtime_data`, resolvidos por `importlib.resources`. O lifetime
+do recurso cobre toda a execução do servidor. Com
+`--configuration-root PATH`, o caminho externo absoluto substitui
+integralmente os recursos empacotados; não há descoberta por cwd, merge ou
+fallback.
+
+```text
+CLI
+  → package resources ou configuration root externo
+  → create_app(configuration_root)
+  → lifespan: RuntimeContext + OllamaExecutor
+  → Uvicorn
+```
+
+O bind default é `127.0.0.1:8000`. Host não-loopback exige opção explícita e
+gera warning operacional porque a API não possui autenticação como mecanismo
+de proteção neste estágio.
+
 ## Separação de responsabilidades
 
 ### Configuração

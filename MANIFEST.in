@@ -1,0 +1,17 @@
+include CONTRIBUTING.md
+include LICENSE
+include README.md
+include SECURITY.md
+include pyproject.toml
+recursive-include config *.yaml
+recursive-include docs *.md
+recursive-include profiles *.yaml
+recursive-include rules *.yaml
+recursive-include src/villaz_router/runtime_data *.yaml
+exclude AGENTS.md
+prune .git
+prune .venv
+prune build
+prune dist
+global-exclude __pycache__
+global-exclude *.py[cod]

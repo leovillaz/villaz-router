@@ -73,6 +73,7 @@ def test_core_modules_do_not_import_http_adapter() -> None:
             )
         )
         for path in PACKAGE_ROOT.glob("*.py")
+        if path.name not in {"cli.py", "__main__.py"}
     }
 
     assert not {
@@ -101,6 +102,29 @@ def test_http_adapter_does_not_bypass_bootstrap() -> None:
         for name, modules in violations.items()
         if modules
     }
+
+
+def test_cli_is_only_root_http_composition_module() -> None:
+    importers = {
+        path.name
+        for path in PACKAGE_ROOT.glob("*.py")
+        if any(
+            module.startswith("villaz_router.http_api")
+            for module in imported_modules(path)
+        )
+    }
+
+    assert importers == {"cli.py"}
+
+
+def test_cli_is_only_root_uvicorn_importer() -> None:
+    importers = {
+        path.name
+        for path in PACKAGE_ROOT.glob("*.py")
+        if "uvicorn" in imported_modules(path)
+    }
+
+    assert importers == {"cli.py"}
 
 
 def test_only_router_adapter_imports_router_directly() -> None:

@@ -1,117 +1,163 @@
 # Guia de replicação
 
-Este documento descreve como reproduzir o estado funcional atual do Villaz Router em outra máquina.
+Este guia separa a reprodução hermética do projeto da execução operacional com Ollama. Wheel, sdist e clean install ainda serão validados no gate de artefatos; o fluxo abaixo parte do código-fonte atual.
 
-## Etapa A — Preparar a máquina
-
-```bash
-sudo apt update
-sudo apt install -y git python3 python3-pip python3-venv
-```
-
-## Etapa B — Obter o código
+## 1. Obter o código
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
+git clone https://github.com/leovillaz/villaz-router
 cd villaz-router
 ```
 
-## Etapa C — Criar ambiente isolado
+## 2. Preparar o Python
+
+Requisito declarado: Python 3.13 ou superior. A matriz CI atual cobre somente Python 3.13; compatibilidade com versões posteriores ainda não é validada pela CI.
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+python -m venv .venv
+python -m pip install -e ".[dev]"
 ```
 
-## Etapa D — Conferir os artefatos normativos
+Ative o venv com o comando apropriado para a plataforma antes de continuar.
 
-Devem existir:
+## 3. Reprodução hermética
+
+Execute a suíte automatizada:
+
+```bash
+python -m pytest -q
+```
+
+Os testes normais não exigem servidor Ollama, modelos, GPU, socket ou internet. Integrações substituem os boundaries externos e preservam Router, Dispatcher, Registry e requests reais.
+
+O baseline completo corrente, executado no host Linux autoritativo após o hardening local, é `914 passed in 2.59s`, sem failures ou erros de collection e sem skips ou xfails inesperados reportados. O baseline completo anterior ao hardening foi `893 passed in 2.43s`.
+
+## 4. Preparar o Ollama
+
+Instale e inicie o Ollama usando o procedimento suportado pelo fornecedor. O Villaz Router não instala o serviço e não baixa modelos automaticamente.
+
+Os identificadores distintos referenciados atualmente são:
 
 ```text
-config/router.yaml
-config/ollama.yaml
-profiles/profiles.yaml
-rules/profiles.yaml
-rules/domains.yaml
-rules/intents.yaml
-rules/routing.yaml
+gemma3:12b
+qwen2.5-coder:14b
+qwen3:14b
 ```
 
-No startup, `create_app()` inicializa o `RuntimeContext`, carrega `config/ollama.yaml` e cria um único `OllamaExecutor` no lifespan. O contexto e o executor são reutilizados entre requests e removidos após o fechamento do executor no shutdown. Esse processo não realiza probe de rede Ollama.
-
-O endpoint funcional é `POST /v1/prompt`. Seu fluxo é:
-
-```text
-HTTP → PromptRequest → HTTP Router adapter → Router → Dispatcher/Profile Registry → OllamaExecutionRequest → OllamaExecutor → HTTP PromptResponse
-```
-
-## Etapa E — Executar os testes
+Obtenha-os antes da validação operacional:
 
 ```bash
-pytest -v
+ollama pull gemma3:12b
+ollama pull qwen2.5-coder:14b
+ollama pull qwen3:14b
+ollama list
 ```
 
-## Etapa F — Validar o ruleset
+Os modelos não são distribuídos nem relicenciados pelo projeto. Após os modelos estarem disponíveis, o fluxo local não deve depender de internet.
+
+## 5. Iniciar a API
 
 ```bash
-python -c 'from pathlib import Path; from villaz_router.loader import load_and_validate_ruleset_documents; load_and_validate_ruleset_documents(Path(".")); print("ruleset: OK")'
+villaz-router serve
 ```
 
-## Resultado mínimo para considerar a réplica válida
+Equivalente:
 
-- dependências instaladas;
-- pacote `villaz_router` importável;
-- testes aprovados;
-- ruleset carregado;
-- validação semântica aprovada;
-- working tree Git limpo.
+```bash
+python -m villaz_router serve
+```
 
-## O que já está concluído
+A CLI usa `127.0.0.1:8000` e os package resources por default. No startup:
 
-No estado atual, já estão concluídos:
+1. o `RuntimeContext` é construído;
+2. `config/ollama.yaml` é carregado;
+3. um único `OllamaExecutor` é criado;
+4. contexto e executor são mantidos no lifespan;
+5. o executor é fechado no shutdown.
 
-- canonicalização semântica;
-- JSON determinístico UTF-8;
-- hash lógico SHA-256;
-- `RulesetSnapshot`;
-- normalização determinística de mensagem;
-- matching de `term` e `phrase`;
-- validação de evidências normalizadas;
-- scoring determinístico em runtime;
-- `EvidenceContribution` e `ScoringResult`;
-- validações de integridade entre matches e evidências configuradas;
-- elegibilidade por threshold e weak-only gate;
-- qualificação estrutural de Routes;
-- resolução por prioridade e margem;
-- gate de conflito entre Intents `route_capable`;
-- `RouteCandidate` e `RouteDecision`;
-- API pública `decide_route`;
-- Profile Registry determinístico;
-- Dispatcher com `DispatchPlan` e API pública `build_dispatch_plan`;
-- Runtime Compatibility Validator entre Ruleset e Profile Registry;
-- configuração operacional oficial com cinco profiles habilitados;
-- Application Bootstrap com `bootstrap_runtime()` e `RuntimeContext` imutável;
-- aplicação FastAPI funcional com `create_app()`, lifecycle fail-fast, health probes e `POST /v1/prompt`;
-- Ollama Execution assíncrona e injetável em `villaz_router.ollama_execution`;
-- configuração oficial `config/ollama.yaml` carregada por `config_loader.py`;
-- configuração explícita por `OllamaClientConfig`, `OllamaTimeoutConfig` e `OllamaConnectionLimits`;
-- `OllamaExecutor` com transporte abstrato `OllamaTransport`;
-- implementação HTTPX2 interna para `POST /api/generate`;
-- integração oficial Bootstrap → Router → Dispatcher/Profile Registry → Ollama Execution validada com transporte falso e sem rede;
-- integração vertical HTTP de RT-017/Unity validada substituindo somente o boundary Ollama;
-- suíte corrente com 893 testes; os checkpoints históricos da `VALIDAÇÃO-001.09`, do Dispatcher, do Application Bootstrap e da Ollama Execution permanecem, respectivamente, em 228, 384, 435 e 707 testes.
+A construção e a readiness não fazem probe ao Ollama.
 
-## Validação comportamental
+## 6. Verificar o estado HTTP
 
-RT-001–RT-048 estão executados contra `decide_route()` e reconciliados. Os casos RT-045–RT-048 são repetidos 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap, aplicação FastAPI e Ollama Execution estão implementados e validados. RT-017 também percorre o fluxo vertical via `POST /v1/prompt`, usando Router, Dispatcher, Registry e `OllamaExecutionRequest` reais; somente a execução final é simulada no boundary Ollama. Os testes automatizados não exigem TCP, servidor Ollama, GPU ou internet. O baseline corrente da suíte completa é `893 passed in 2.43s`.
+Liveness:
 
-## O que ainda não deve ser esperado
+```bash
+curl http://127.0.0.1:8000/health/live
+```
 
-Ainda não estão concluídos:
+Resposta:
 
-- autenticação e autorização;
-- servidor ASGI e deployment;
-- Public Release Hardening e gate de publicação.
+```json
+{
+  "status": "alive"
+}
+```
 
-Esses itens pertencem às próximas fases; a IMPLEMENTAÇÃO-002.10 está tecnicamente concluída localmente, mas ainda não foi publicada.
+Readiness state-based:
+
+```bash
+curl http://127.0.0.1:8000/health/ready
+```
+
+Resposta pronta:
+
+```json
+{
+  "status": "ready"
+}
+```
+
+Esse resultado confirma `RuntimeContext` e `OllamaExecutor` válidos no lifespan, não conectividade com o Ollama.
+
+## 7. Executar um prompt real
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/prompt \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Meu Rigidbody está se movimentando de forma irregular."}'
+```
+
+Formato de sucesso:
+
+```json
+{
+  "response": "Resposta produzida pelo modelo.",
+  "profile": "unity-dev",
+  "model": "qwen2.5-coder:14b",
+  "state": "routed",
+  "route_id": "ROUTE-UNITY-001"
+}
+```
+
+`response` pode variar. `profile`, `model`, `state` e `route_id` refletem o plano executado. Consulte [API.md](API.md) para os erros e limites.
+
+## 8. Configuração externa opcional
+
+```bash
+villaz-router serve --configuration-root /caminho/para/configuracao
+```
+
+A raiz é um override integral: não há merge ou fallback. Ela precisa conter os sete YAMLs operacionais descritos no [guia de instalação](INSTALLATION.md).
+
+## 9. Critérios de reprodução
+
+### Hermética
+
+- pacote importável;
+- testes automatizados aprovados;
+- package resources presentes;
+- nenhum acesso Ollama real durante os testes.
+
+### Operacional
+
+- critérios herméticos atendidos;
+- Ollama ativo;
+- modelos referenciados disponíveis;
+- health endpoints respondendo;
+- `POST /v1/prompt` retornando sucesso com execução real.
+
+A validação operacional depende do modelo, quantização, contexto, backend e hardware. Não há promessa de desempenho mínimo.
+
+## Gate ainda pendente
+
+Não considere wheel/sdist, clean clone, clean install ou publicação aprovados apenas por concluir este guia. Esses itens pertencem ao publication gate posterior.

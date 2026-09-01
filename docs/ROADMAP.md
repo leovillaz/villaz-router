@@ -1,77 +1,50 @@
 # Roadmap
 
-## Fase 1 — Bootstrap do Router
+## Router v1
 
-- [x] Contratos internos
-- [x] Modelos do ruleset
-- [x] Loader estrutural
-- [x] Validação semântica
-- [x] ROUTER-007 — reconciliação normativa e endurecimento de contratos
-- [x] RT-001–RT-048 versionados como contrato
-- [x] Canonicalização
-- [x] JSON determinístico UTF-8
-- [x] SHA-256 lógico
-- [x] RulesetSnapshot
-- [x] Snapshot integrado ao loader
+- [x] contratos e modelos formais;
+- [x] loader e validação estrutural/semântica;
+- [x] normalização, matching, scoring e elegibilidade;
+- [x] estados `explicit`, `routed`, `ambiguous` e `unrouted`;
+- [x] matriz normativa RT-001–RT-048;
+- [x] canonicalização, snapshot e hash lógico;
+- [x] decisão determinística sem LLM.
 
-## Fase 2 — Classificação
+## Runtime e integrações
 
-- [x] Normalização Unicode NFKC
-- [x] lowercase/casefold
-- [x] collapse whitespace
-- [x] accent folding
-- [x] boundary matching
-- [x] matching de `term`
-- [x] matching de `phrase`
-- [x] evidência uma vez por request
+- [x] Profile Registry;
+- [x] Dispatcher;
+- [x] compatibilidade Router ↔ Registry;
+- [x] configuração operacional oficial;
+- [x] Application Bootstrap fail-fast;
+- [x] Ollama Execution assíncrona e injetável;
+- [x] API FastAPI, lifecycle e health endpoints;
+- [x] `POST /v1/prompt`;
+- [x] fluxo HTTP → Router → Dispatcher/Profile Registry → Ollama → HTTP;
+- [x] integração vertical hermética RT-017/Unity.
 
-## Fase 3 — Decisão
+## Public Release Hardening
 
-- [x] scoring
-- [x] threshold
-- [x] weak-only gate
-- [x] route evaluation
-- [x] precedência
-- [x] margin
-- [x] ambiguous/unrouted
-- [x] manual explicit profile
-- [x] executar comportamentalmente RT-001–RT-048
-- [x] repetir RT-045–RT-048 dez vezes
+- [x] Apache License 2.0 e metadados públicos;
+- [x] CLI pública e package resources;
+- [x] documentação pública reconciliada;
+- [x] hardening de CI e supply chain implementado e validado localmente; execução remota depende da publicação do commit;
+- [ ] commit e push autorizados;
+- [ ] clean clone e clean install final;
+- [ ] validação final de wheel/sdist no estado publicado;
+- [ ] GitHub Private Vulnerability Reporting habilitado e validado;
+- [ ] E2E operacional com Ollama e modelos reais;
+- [ ] publication gate;
+- [ ] tag e release inicial;
+- [ ] abertura pública do repositório.
 
-## Fase 4 — Integrações
+## Evoluções posteriores ao v1
 
-Somente após o Router isolado e a matriz comportamental estarem validados:
+Somente após o publication gate:
 
-- [x] Profile Registry
-- [x] Dispatcher
-- [x] validação de compatibilidade Router ↔ Profile Registry
-- [x] configuração operacional oficial `profiles/profiles.yaml`
-- [x] Application Bootstrap com `RuntimeContext` imutável e startup fail-fast
-- [x] FastAPI Application Shell, lifecycle e health probes
-- [x] camada Ollama Execution assíncrona, injetável e sem acoplamento ao core
-- [x] validar Bootstrap → Router → Dispatcher/Profile Registry → Ollama Execution com transporte falso e sem rede
-- [x] implementar `POST /v1/prompt` como endpoint HTTP funcional para prompts
-- [x] validar o fluxo API → Router → Dispatcher/Profile Registry → Ollama
-- [x] validar RT-017/Unity verticalmente via HTTP até o boundary Ollama, sem rede real
-
-## Public Release Hardening — próxima etapa
-
-Após o fechamento do fluxo vertical funcional:
-
-- [ ] separar configuração pública de configuração operacional privada
-- [ ] auditar histórico e working tree para segredos, credenciais e dados pessoais
-- [ ] definir política para `system_prompt` operacional e fornecer templates públicos seguros
-- [ ] revisar `SECURITY.md`, instalação e guia de replicação
-- [ ] escolher licença pública
-- [ ] validar reprodução limpa por usuário externo
-- [ ] criar tag/release inicial
-- [ ] tornar o projeto público
-
-## Fase futura
-
-- Villaz CLI / Villaz Terminal após o gate funcional do Router v1;
-- Orchestrator para workflows multi-perfil;
+- Orchestrator para workflows multi-profile;
+- Villaz Terminal e expansão da experiência de CLI;
 - Base Fiscal + RAG;
-- Villaz Code após o gate do fluxo vertical;
-- hot reload versionado, se houver necessidade real;
-- observabilidade ampliada.
+- Villaz Code;
+- hot reload versionado, se houver necessidade normativa;
+- observabilidade ampliada sem exposição de dados sensíveis.

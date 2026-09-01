@@ -1,0 +1,36 @@
+schema_version: "1.0"
+
+router:
+  engine:
+    expected_major_version: 1
+
+  scoring:
+    strong: 10
+    medium: 4
+    weak: 1
+
+  eligibility:
+    minimum_score: 10
+    weak_only_cannot_qualify: true
+
+  ambiguity:
+    minimum_margin: 5
+
+  normalization:
+    unicode_nfkc: true
+    lowercase: true
+    lowercase_locale_independent: true
+    collapse_whitespace: true
+    accent_insensitive_matching: true
+
+  lifecycle:
+    ruleset_reload: startup_only
+    immutable_snapshot_per_instance: true
+
+  integrity:
+    algorithm: sha256
+    canonical_format: deterministic_json_utf8
+
+  privacy:
+    store_full_message: false
+    store_evidence: true

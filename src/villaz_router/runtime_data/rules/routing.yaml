@@ -1,0 +1,43 @@
+schema_version: "1.0"
+ruleset_version: "1.0.0"
+
+routes:
+  - id: ROUTE-REVIEW-001
+    enabled: true
+    priority: 500
+    when:
+      intent: review-security
+    result:
+      profile: code-review-security
+
+  - id: ROUTE-DOC-001
+    enabled: true
+    priority: 400
+    when:
+      intent: documentation
+    result:
+      profile: docs-dev
+
+  - id: ROUTE-UNITY-001
+    enabled: true
+    priority: 300
+    when:
+      domain: unity
+    result:
+      profile: unity-dev
+
+  - id: ROUTE-MOBILE-001
+    enabled: true
+    priority: 200
+    when:
+      domain: mobile
+    result:
+      profile: mobile-dev
+
+  - id: ROUTE-FISCAL-001
+    enabled: true
+    priority: 450
+    when:
+      domain: fiscal
+    result:
+      profile: fiscal-finance

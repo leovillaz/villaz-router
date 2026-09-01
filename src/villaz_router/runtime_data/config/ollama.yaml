@@ -1,0 +1,12 @@
+base_url: http://127.0.0.1:11434
+
+timeouts:
+  connect_seconds: 5.0
+  read_seconds: 300.0
+  write_seconds: 10.0
+  pool_seconds: 5.0
+
+limits:
+  max_connections: 1
+  max_keepalive_connections: 1
+  keepalive_expiry_seconds: 30.0

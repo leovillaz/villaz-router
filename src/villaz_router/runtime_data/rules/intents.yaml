@@ -1,0 +1,99 @@
+schema_version: "1.0"
+ruleset_version: "1.0.0"
+
+intents:
+  - id: documentation
+    route_capable: true
+    evidence:
+      - id: INTENT-DOC-001
+        type: term
+        strength: strong
+        value: "documente"
+      - id: INTENT-DOC-002
+        type: phrase
+        strength: strong
+        value: "documentação técnica"
+      - id: INTENT-DOC-003
+        type: phrase
+        strength: strong
+        value: "crie um readme"
+      - id: INTENT-DOC-004
+        type: phrase
+        strength: strong
+        value: "em markdown"
+      - id: INTENT-DOC-005
+        type: phrase
+        strength: strong
+        value: "procedimento de instalação"
+      - id: INTENT-DOC-006
+        type: phrase
+        strength: strong
+        value: "especificação técnica"
+
+  - id: review-security
+    route_capable: true
+    evidence:
+      - id: INTENT-REVIEW-001
+        type: phrase
+        strength: strong
+        value: "code review"
+      - id: INTENT-REVIEW-002
+        type: phrase
+        strength: strong
+        value: "revisão de segurança"
+      - id: INTENT-REVIEW-003
+        type: phrase
+        strength: strong
+        value: "analise vulnerabilidades"
+      - id: INTENT-REVIEW-004
+        type: term
+        strength: strong
+        value: "audite"
+      - id: INTENT-REVIEW-005
+        type: phrase
+        strength: strong
+        value: "analise a segurança"
+      - id: INTENT-REVIEW-006
+        type: phrase
+        strength: strong
+        value: "revise a segurança"
+      - id: INTENT-REVIEW-007
+        type: phrase
+        strength: strong
+        value: "procurando vulnerabilidades"
+      - id: INTENT-REVIEW-008
+        type: phrase
+        strength: strong
+        value: "existe sql injection"
+      - id: INTENT-REVIEW-009
+        type: phrase
+        strength: strong
+        value: "pode vazar dados pessoais"
+
+  - id: development
+    route_capable: false
+    evidence:
+      - id: INTENT-DEV-001
+        type: term
+        strength: strong
+        value: "implemente"
+      - id: INTENT-DEV-002
+        type: term
+        strength: strong
+        value: "desenvolva"
+      - id: INTENT-DEV-003
+        type: term
+        strength: strong
+        value: "refatore"
+
+  - id: question
+    route_capable: false
+    evidence:
+      - id: INTENT-QUESTION-001
+        type: term
+        strength: weak
+        value: "como"
+      - id: INTENT-QUESTION-002
+        type: term
+        strength: weak
+        value: "explique"

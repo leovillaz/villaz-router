@@ -1,0 +1,143 @@
+schema_version: "1.0"
+ruleset_version: "1.0.0"
+
+domains:
+  - id: mobile
+    evidence:
+      - id: DOMAIN-MOBILE-001
+        type: term
+        strength: strong
+        value: "flutter"
+      - id: DOMAIN-MOBILE-002
+        type: term
+        strength: strong
+        value: "statefulwidget"
+      - id: DOMAIN-MOBILE-003
+        type: phrase
+        strength: strong
+        value: "jetpack compose"
+      - id: DOMAIN-MOBILE-004
+        type: term
+        strength: medium
+        value: "android"
+      - id: DOMAIN-MOBILE-005
+        type: term
+        strength: strong
+        value: "swiftui"
+      - id: DOMAIN-MOBILE-006
+        type: term
+        strength: strong
+        value: "futurebuilder"
+      - id: DOMAIN-MOBILE-007
+        type: term
+        strength: strong
+        value: "kotlin"
+      - id: DOMAIN-MOBILE-008
+        type: term
+        strength: strong
+        value: "firebase"
+      - id: DOMAIN-MOBILE-009
+        type: term
+        strength: strong
+        value: "dart"
+
+  - id: unity
+    evidence:
+      - id: DOMAIN-UNITY-001
+        type: term
+        strength: strong
+        value: "unity"
+      - id: DOMAIN-UNITY-002
+        type: term
+        strength: strong
+        value: "monobehaviour"
+      - id: DOMAIN-UNITY-003
+        type: term
+        strength: strong
+        value: "gameobject"
+      - id: DOMAIN-UNITY-004
+        type: term
+        strength: strong
+        value: "rigidbody"
+      - id: DOMAIN-UNITY-005
+        type: term
+        strength: medium
+        value: "scene"
+      - id: DOMAIN-UNITY-006
+        type: term
+        strength: strong
+        value: "fixedupdate"
+      - id: DOMAIN-UNITY-007
+        type: term
+        strength: strong
+        value: "getcomponent"
+      - id: DOMAIN-UNITY-008
+        type: term
+        strength: strong
+        value: "prefab"
+      - id: DOMAIN-UNITY-009
+        type: term
+        strength: strong
+        value: "animator"
+      - id: DOMAIN-UNITY-010
+        type: term
+        strength: strong
+        value: "collider"
+
+  - id: fiscal
+    evidence:
+      - id: DOMAIN-FISCAL-001
+        type: term
+        strength: strong
+        value: "cfop"
+      - id: DOMAIN-FISCAL-002
+        type: term
+        strength: strong
+        value: "csosn"
+      - id: DOMAIN-FISCAL-003
+        type: phrase
+        strength: strong
+        value: "cst icms"
+      - id: DOMAIN-FISCAL-004
+        type: term
+        strength: strong
+        value: "icms"
+      - id: DOMAIN-FISCAL-005
+        type: term
+        strength: strong
+        value: "ncm"
+      - id: DOMAIN-FISCAL-006
+        type: term
+        strength: medium
+        value: "fiscal"
+      - id: DOMAIN-FISCAL-007
+        type: term
+        strength: strong
+        value: "tributação"
+      - id: DOMAIN-FISCAL-008
+        type: phrase
+        strength: strong
+        value: "nf-e"
+      - id: DOMAIN-FISCAL-009
+        type: term
+        strength: strong
+        value: "cst"
+
+  - id: security
+    evidence:
+      - id: DOMAIN-SECURITY-001
+        type: term
+        strength: strong
+        value: "owasp"
+      - id: DOMAIN-SECURITY-002
+        type: phrase
+        strength: strong
+        value: "sql injection"
+      - id: DOMAIN-SECURITY-003
+        type: term
+        strength: strong
+        value: "xss"
+      - id: DOMAIN-SECURITY-004
+        type: term
+        strength: strong
+        value: "vulnerabilidade"
