@@ -23,19 +23,17 @@ RouteDecision
 Integrações externas não pertencem ao core:
 
 ```text
-API
- |
- v
-Router
- |
- v
+HTTP / PromptRequest
+        ↓
+HTTP Router adapter
+        ↓
+Router determinístico
+        ↓
 Dispatcher / Profile Registry
- |
- v
-Ollama Execution
- |
- v
-Ollama
+        ↓
+OllamaExecutionRequest / OllamaExecutor
+        ↓
+HTTP / PromptResponse
 ```
 
 ## Separação de responsabilidades
@@ -128,13 +126,13 @@ A única operação Ollama suportada na v1 é `POST /api/generate`, com os campo
 
 A construção do executor não realiza rede, preflight, inventário de modelos, preload, download, heartbeat ou polling. A camada também não implementa retry, fallback, persistência automática, shell ou subprocessos.
 
-O FastAPI Application Shell ainda não executa prompts. O fluxo HTTP funcional até Ollama permanece uma integração posterior.
+O endpoint `POST /v1/prompt` executa o fluxo funcional HTTP → adapter → Router → Dispatcher/Profile Registry → OllamaExecutor → HTTP. O `router_adapter.py` conhece somente os contratos HTTP, o `RuntimeContext` e o Router; a composição com Dispatcher e Ollama pertence a `routes.py`.
 
-O fluxo já validado de forma hermética é:
+O fluxo vertical validado de forma hermética é:
 
-    bootstrap_runtime()
+    PromptRequest
         ↓
-    RouteRequest
+    HTTP Router adapter
         ↓
     decide_route()
         ↓
@@ -148,11 +146,17 @@ O fluxo já validado de forma hermética é:
         ↓
     OllamaExecutor
         ↓
-    OllamaTransport falso
+    execute() substituído no boundary Ollama
         ↓
     OllamaExecutionResult
+        ↓
+    PromptResponse
 
-Esse teste usa a configuração operacional oficial, mas não realiza conexão de rede.
+Esse teste usa a configuração oficial, o Router, o Dispatcher, o Profile Registry e o request de execução reais, mas não realiza conexão de rede.
+
+No lifespan FastAPI, o `RuntimeContext` é inicializado, `config/ollama.yaml` é carregado e um único `OllamaExecutor` é criado, armazenado em `app.state`, reutilizado entre requests e fechado no shutdown. Não há probe Ollama no startup ou na readiness.
+
+O limite bruto de 65.536 bytes é aplicado no ASGI `receive` boundary antes de FastAPI/Pydantic/Router. O composition boundary em `routes.py` também traduz falhas para envelopes públicos seguros, sem expor exceções, `system_prompt`, hashes, configuração ou payload upstream.
 
 ## Determinismo
 

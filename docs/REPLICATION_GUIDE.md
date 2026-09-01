@@ -30,10 +30,20 @@ Devem existir:
 
 ```text
 config/router.yaml
+config/ollama.yaml
+profiles/profiles.yaml
 rules/profiles.yaml
 rules/domains.yaml
 rules/intents.yaml
 rules/routing.yaml
+```
+
+No startup, `create_app()` inicializa o `RuntimeContext`, carrega `config/ollama.yaml` e cria um único `OllamaExecutor` no lifespan. O contexto e o executor são reutilizados entre requests e removidos após o fechamento do executor no shutdown. Esse processo não realiza probe de rede Ollama.
+
+O endpoint funcional é `POST /v1/prompt`. Seu fluxo é:
+
+```text
+HTTP → PromptRequest → HTTP Router adapter → Router → Dispatcher/Profile Registry → OllamaExecutionRequest → OllamaExecutor → HTTP PromptResponse
 ```
 
 ## Etapa E — Executar os testes
@@ -82,25 +92,26 @@ No estado atual, já estão concluídos:
 - Runtime Compatibility Validator entre Ruleset e Profile Registry;
 - configuração operacional oficial com cinco profiles habilitados;
 - Application Bootstrap com `bootstrap_runtime()` e `RuntimeContext` imutável;
-- FastAPI Application Shell com `create_app()`, lifecycle fail-fast e health probes;
+- aplicação FastAPI funcional com `create_app()`, lifecycle fail-fast, health probes e `POST /v1/prompt`;
 - Ollama Execution assíncrona e injetável em `villaz_router.ollama_execution`;
+- configuração oficial `config/ollama.yaml` carregada por `config_loader.py`;
 - configuração explícita por `OllamaClientConfig`, `OllamaTimeoutConfig` e `OllamaConnectionLimits`;
 - `OllamaExecutor` com transporte abstrato `OllamaTransport`;
 - implementação HTTPX2 interna para `POST /api/generate`;
 - integração oficial Bootstrap → Router → Dispatcher/Profile Registry → Ollama Execution validada com transporte falso e sem rede;
-- suíte corrente com 707 testes; os checkpoints históricos da `VALIDAÇÃO-001.09`, do Dispatcher e do Application Bootstrap permanecem, respectivamente, em 228, 384 e 435 testes.
+- integração vertical HTTP de RT-017/Unity validada substituindo somente o boundary Ollama;
+- suíte corrente com 893 testes; os checkpoints históricos da `VALIDAÇÃO-001.09`, do Dispatcher, do Application Bootstrap e da Ollama Execution permanecem, respectivamente, em 228, 384, 435 e 707 testes.
 
 ## Validação comportamental
 
-RT-001–RT-048 estão executados contra `decide_route()` e reconciliados. Os casos RT-045–RT-048 são repetidos 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap, FastAPI Application Shell e Ollama Execution estão implementados e validados. O fluxo integrado com `RT-017` também está validado localmente com transporte falso e sem rede. O baseline corrente da suíte completa é `707 passed`.
+RT-001–RT-048 estão executados contra `decide_route()` e reconciliados. Os casos RT-045–RT-048 são repetidos 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap, aplicação FastAPI e Ollama Execution estão implementados e validados. RT-017 também percorre o fluxo vertical via `POST /v1/prompt`, usando Router, Dispatcher, Registry e `OllamaExecutionRequest` reais; somente a execução final é simulada no boundary Ollama. Os testes automatizados não exigem TCP, servidor Ollama, GPU ou internet. O baseline corrente da suíte completa é `893 passed in 2.43s`.
 
 ## O que ainda não deve ser esperado
 
 Ainda não estão concluídos:
 
-- endpoint HTTP funcional para prompts;
-- autenticação, autorização e tratamento HTTP funcional;
+- autenticação e autorização;
 - servidor ASGI e deployment;
-- validação do fluxo vertical completo.
+- Public Release Hardening e gate de publicação.
 
-Esses itens pertencem às próximas fases.
+Esses itens pertencem às próximas fases; a IMPLEMENTAÇÃO-002.10 está tecnicamente concluída localmente, mas ainda não foi publicada.

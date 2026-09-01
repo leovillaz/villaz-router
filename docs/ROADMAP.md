@@ -50,10 +50,11 @@ Somente após o Router isolado e a matriz comportamental estarem validados:
 - [x] FastAPI Application Shell, lifecycle e health probes
 - [x] camada Ollama Execution assíncrona, injetável e sem acoplamento ao core
 - [x] validar Bootstrap → Router → Dispatcher/Profile Registry → Ollama Execution com transporte falso e sem rede
-- [ ] implementar endpoint HTTP funcional para prompts
-- [ ] validar o fluxo API → Router → Dispatcher/Profile Registry → Ollama
+- [x] implementar `POST /v1/prompt` como endpoint HTTP funcional para prompts
+- [x] validar o fluxo API → Router → Dispatcher/Profile Registry → Ollama
+- [x] validar RT-017/Unity verticalmente via HTTP até o boundary Ollama, sem rede real
 
-## Publicação pública
+## Public Release Hardening — próxima etapa
 
 Após o fechamento do fluxo vertical funcional:
 

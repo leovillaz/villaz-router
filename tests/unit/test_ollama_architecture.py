@@ -35,6 +35,7 @@ OLLAMA_ROOT = PACKAGE_ROOT / "ollama_execution"
 EXPECTED_FILES = {
     "__init__.py",
     "config.py",
+    "config_loader.py",
     "errors.py",
     "executor.py",
     "factory.py",
@@ -148,22 +149,22 @@ def test_core_modules_do_not_import_ollama_execution() -> None:
     }
 
 
-def test_http_adapter_does_not_import_ollama_execution() -> None:
-    violations = {
-        path.name: sorted(
-            module
-            for module in imported_modules(path)
-            if module.startswith(
+def test_only_approved_http_modules_import_ollama_execution() -> None:
+    importers = {
+        path.name
+        for path in HTTP_API_ROOT.glob("*.py")
+        if any(
+            module.startswith(
                 "villaz_router.ollama_execution"
             )
+            for module in imported_modules(path)
         )
-        for path in HTTP_API_ROOT.glob("*.py")
     }
 
-    assert not {
-        name: modules
-        for name, modules in violations.items()
-        if modules
+    assert importers == {
+        "app.py",
+        "dependencies.py",
+        "routes.py",
     }
 
 
@@ -205,13 +206,11 @@ def test_ollama_package_has_no_forbidden_infrastructure() -> None:
         "logging",
         "ollama",
         "os",
-        "pathlib",
         "requests",
         "sqlite3",
         "starlette",
         "subprocess",
         "uvicorn",
-        "yaml",
     }
 
     violations = {
@@ -228,6 +227,17 @@ def test_ollama_package_has_no_forbidden_infrastructure() -> None:
         name: modules
         for name, modules in violations.items()
         if modules
+    }
+
+
+def test_config_loader_has_exact_import_boundary() -> None:
+    assert imported_modules(
+        OLLAMA_ROOT / "config_loader.py"
+    ) == {
+        "pathlib",
+        "typing",
+        "yaml",
+        "villaz_router.ollama_execution.config",
     }
 
 

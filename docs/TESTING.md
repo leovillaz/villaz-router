@@ -8,7 +8,7 @@
 
 ## Estado atual
 
-A suíte corrente possui **707 testes**. Permanecem preservados os baselines históricos de `228 passed` na `VALIDAÇÃO-001.09`, `333 passed` no Profile Registry, `384 passed` no Dispatcher, `411 passed` no Runtime Compatibility Validator, `412 passed` na configuração operacional oficial e `435 passed` no Application Bootstrap.
+A suíte corrente possui **893 testes**, aprovados em `2.43s` sem failures, skips, xfails, warnings do pytest ou erros de collection. Permanecem preservados os baselines históricos de `228 passed` na `VALIDAÇÃO-001.09`, `333 passed` no Profile Registry, `384 passed` no Dispatcher, `411 passed` no Runtime Compatibility Validator, `412 passed` na configuração operacional oficial, `435 passed` no Application Bootstrap e `707 passed` na Ollama Execution.
 
 Cobertura atual:
 
@@ -128,18 +128,29 @@ Cobertura atual:
 - dependency tipada `get_runtime_context(request)`;
 - erros exatos para contexto ausente ou de tipo incorreto;
 - liveness independente do contexto de runtime;
-- readiness dependente exclusivamente do contexto tipado;
+- readiness dependente de `RuntimeContext` e `OllamaExecutor` válidos no lifespan, sem probe Ollama;
 - respostas exatas e não sensíveis dos endpoints de health;
 - rejeição de métodos inválidos e caminhos desconhecidos;
 - OpenAPI, Swagger UI e ReDoc desabilitados;
 - propagação de falhas de bootstrap sem mascaramento;
 - proteção arquitetural FastAPI → Application Bootstrap → domínio;
-- ausência de loaders, validator, Dispatcher, Ollama, Uvicorn e subprocessos na camada HTTP;
+- `router_adapter.py` sem dependência de Dispatcher, Ollama ou response objects do FastAPI;
+- dependência de Ollama restrita a `app.py`, `dependencies.py` e `routes.py` como pontos aprovados de lifecycle, injeção e composição;
 - exports públicos exatos de `villaz_router.http_api`;
-- integração da FastAPI Application Shell com a configuração operacional oficial;
+- integração da aplicação FastAPI com a configuração operacional oficial;
 - FastAPI `0.141.1` e HTTPX2 `2.12.0`;
 - `pip check` sem requisitos quebrados;
-- 45 testes específicos da camada HTTP.
+- loader oficial de `config/ollama.yaml` e classificação de configuração inválida;
+- criação única, reutilização e fechamento do `OllamaExecutor` no lifespan;
+- dependencies reais de `RuntimeContext` e `OllamaExecutor`;
+- limite bruto de body no ASGI `receive` boundary, antes de FastAPI/Pydantic/Router, com 65.536 bytes permitidos e 65.537 bytes rejeitados;
+- preservação e replay dos eventos ASGI válidos;
+- endpoint `POST /v1/prompt` e adaptação exata de `PromptRequest` para o Router;
+- composição Dispatcher → `OllamaExecutionRequest` → executor;
+- mapeamento público seguro: estado `AMBIGUOUS` → HTTP 409, `UNROUTED` → HTTP 422, `INVALID_PROFILE` → HTTP 422, `INTERNAL_ERROR` → HTTP 500, `MODEL_SERVICE_TIMEOUT` → HTTP 504, `MODEL_SERVICE_UNAVAILABLE` → HTTP 503 e `MODEL_SERVICE_ERROR` → HTTP 502;
+- tradução de `HTTP_STATUS_ERROR` do Ollama para `MODEL_SERVICE_ERROR` → HTTP 502, sem propagação do status upstream;
+- propagação de cancelamento assíncrono;
+- integração vertical hermética de RT-017/Unity via HTTP, substituindo somente `OllamaExecutor.execute`.
 
 ## Cobertura da Ollama Execution
 
@@ -148,6 +159,7 @@ A IMPLEMENTAÇÃO-002.09 adiciona cobertura específica para a camada `villaz_ro
 Os testes cobrem:
 
 - contratos estritos e imutáveis de `OllamaTimeoutConfig`, `OllamaConnectionLimits` e `OllamaClientConfig`;
+- carregamento seguro da configuração oficial por `config_loader.py`, sem rede ou criação de transporte;
 - rejeição de campos extras e tipos incompatíveis;
 - validação explícita de URL base, incluindo esquema, host, credenciais, query, fragment, whitespace e path operacional;
 - coerência dos limites de conexão;
@@ -175,7 +187,7 @@ Os testes cobrem:
 - superfície pública exata do subpacote `ollama_execution`;
 - `Httpx2OllamaTransport` mantido como detalhe interno;
 - ausência de símbolos Ollama no pacote raiz `villaz_router`;
-- ausência de dependência Ollama no core, Dispatcher, bootstrap e FastAPI Application Shell;
+- ausência de dependência Ollama no core, Dispatcher, bootstrap e `router_adapter.py`, com imports HTTP restritos aos três composition points aprovados;
 - ausência de endpoints Ollama adicionais além de `/api/generate`;
 - dependência HTTPX2 somente nas camadas de infraestrutura previstas;
 - integração oficial Bootstrap → Router → Dispatcher/Profile Registry → Ollama Execution com transporte falso;
@@ -183,7 +195,7 @@ Os testes cobrem:
 
 O teste oficial de integração utiliza um caso determinístico real da matriz normativa (`RT-017`) e valida que o prompt original do usuário permanece separado do `system_prompt`.
 
-A suíte específica da IMPLEMENTAÇÃO-002.09 foi aprovada com `227 passed in 0.63s`. A suíte completa foi aprovada posteriormente com `707 passed in 2.07s`, estabelecendo o novo baseline corrente do projeto.
+A suíte específica da IMPLEMENTAÇÃO-002.09 foi aprovada com `227 passed in 0.63s`. Sua suíte completa foi aprovada posteriormente com `707 passed in 2.07s`; esse baseline histórico foi substituído pelo gate da IMPLEMENTAÇÃO-002.10, com `893 passed in 2.43s`.
 
 ## Matriz normativa
 
@@ -195,7 +207,7 @@ tests/regression/router_v1_cases.json
 
 Os testes atuais validam os 48 casos como artefato normativo: IDs, campos, seleção manual, perfil inválido e repetições de determinismo.
 
-O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão está implementado. RT-001–RT-048 são validados tanto como artefato normativo quanto comportamentalmente contra `decide_route()`. RT-045–RT-048 são executados 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap, FastAPI Application Shell e Ollama Execution também estão implementados e validados localmente. A próxima etapa funcional é a integração HTTP completa API → Router → Dispatcher/Profile Registry → Ollama.
+O pipeline runtime de normalização, matching, scoring, elegibilidade e decisão está implementado. RT-001–RT-048 são validados tanto como artefato normativo quanto comportamentalmente contra `decide_route()`. RT-045–RT-048 são executados 10 vezes cada para verificar determinismo. Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap e Ollama Execution também estão implementados e validados localmente. RT-017/Unity atravessa hermeticamente o fluxo HTTP → Router → Dispatcher/Profile Registry → Ollama Execution → HTTP, sem rede Ollama real.
 
 ## Verificações adicionais
 

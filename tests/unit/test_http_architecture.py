@@ -84,10 +84,8 @@ def test_core_modules_do_not_import_http_adapter() -> None:
 
 def test_http_adapter_does_not_bypass_bootstrap() -> None:
     forbidden = {
-        "villaz_router.dispatcher",
         "villaz_router.loader",
         "villaz_router.registry_loader",
-        "villaz_router.router",
         "villaz_router.runtime_compatibility",
     }
 
@@ -103,6 +101,50 @@ def test_http_adapter_does_not_bypass_bootstrap() -> None:
         for name, modules in violations.items()
         if modules
     }
+
+
+def test_only_router_adapter_imports_router_directly() -> None:
+    router_importers = {
+        path.name
+        for path in HTTP_API_ROOT.glob("*.py")
+        if "villaz_router.router" in imported_modules(path)
+    }
+
+    assert router_importers == {"router_adapter.py"}
+
+
+def test_only_routes_imports_dispatcher_directly() -> None:
+    dispatcher_importers = {
+        path.name
+        for path in HTTP_API_ROOT.glob("*.py")
+        if "villaz_router.dispatcher" in imported_modules(path)
+    }
+
+    assert dispatcher_importers == {"routes.py"}
+
+
+def test_router_adapter_has_no_forbidden_execution_dependencies() -> None:
+    path = HTTP_API_ROOT / "router_adapter.py"
+    forbidden_prefixes = (
+        "fastapi",
+        "starlette.responses",
+        "villaz_router.dispatcher",
+        "villaz_router.dispatcher_models",
+        "villaz_router.loader",
+        "villaz_router.ollama_execution",
+        "villaz_router.registry_loader",
+        "villaz_router.runtime_compatibility",
+    )
+    violations = {
+        module
+        for module in imported_modules(path)
+        if module.startswith(forbidden_prefixes)
+    }
+
+    assert not violations, (
+        "router adapter imports forbidden execution dependencies: "
+        f"{violations}"
+    )
 
 
 def test_http_adapter_has_no_infrastructure_imports() -> None:
@@ -137,6 +179,29 @@ def test_routes_do_not_access_application_state() -> None:
     ).read_text(encoding="utf-8")
 
     assert ".state" not in source
+
+
+def test_routes_do_not_import_runtime_infrastructure() -> None:
+    path = HTTP_API_ROOT / "routes.py"
+    forbidden_prefixes = (
+        "httpx",
+        "villaz_router.loader",
+        "villaz_router.ollama_execution.config_loader",
+        "villaz_router.ollama_execution.factory",
+        "villaz_router.ollama_execution.transport",
+        "villaz_router.registry_loader",
+        "villaz_router.runtime_compatibility",
+    )
+    violations = {
+        module
+        for module in imported_modules(path)
+        if module.startswith(forbidden_prefixes)
+    }
+
+    assert not violations, (
+        "routes import forbidden runtime infrastructure: "
+        f"{violations}"
+    )
 
 
 def test_app_module_has_no_global_application() -> None:

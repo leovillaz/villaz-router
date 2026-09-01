@@ -2,7 +2,7 @@
 
 Router determinístico, declarativo e auditável para seleção de perfis especializados no projeto **Villaz-Lab**.
 
-> **Status:** Router determinístico v1, Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional dos profiles, Application Bootstrap, FastAPI Application Shell e Ollama Execution implementados e validados tecnicamente. A suíte completa corrente possui 707 testes aprovados. Próxima etapa funcional: integração HTTP completa API → Router → Dispatcher/Profile Registry → Ollama.
+> **Status:** A IMPLEMENTAÇÃO-002.10 está tecnicamente concluída localmente, incluindo o fluxo funcional HTTP → Router → Dispatcher/Profile Registry → Ollama Execution → HTTP. A suíte completa corrente possui 893 testes aprovados. Próxima etapa: Public Release Hardening e gate de publicação.
 
 ## Objetivos
 
@@ -74,26 +74,39 @@ Implementado e testado:
 - `RuntimeContext` imutável contendo a raiz normalizada e exatamente os snapshots validados;
 - domínio próprio `ApplicationBootstrapError`, com estágio, código, mensagem e causa preservada;
 - ausência de estado global, fallback, retry, I/O de importação ou captura genérica de erros inesperados;
-- separação arquitetural preservada: o adaptador FastAPI depende do bootstrap, enquanto o bootstrap permanece independente de FastAPI, HTTP e Ollama;
+- separação arquitetural preservada: a camada FastAPI depende do bootstrap, enquanto o bootstrap permanece independente de FastAPI, HTTP e Ollama;
 - APIs públicas `bootstrap_runtime`, `RuntimeContext`, `BootstrapStage`, `ApplicationBootstrapErrorCode` e `ApplicationBootstrapError`;
-- FastAPI Application Shell isolado em `villaz_router.http_api`;
+- aplicação FastAPI isolada em `villaz_router.http_api`;
 - factory pública `create_app(configuration_root)`, sem singleton global, bootstrap ou I/O durante sua criação;
 - lifespan moderno executando `bootstrap_runtime()` exatamente uma vez por ciclo e antes de servir requisições;
-- `RuntimeContext` publicado por identidade em `app.state.runtime_context` e removido no encerramento;
-- dependency pública e tipada `get_runtime_context(request)`;
-- endpoints mínimos `GET /health/live` e `GET /health/ready`, com respostas não sensíveis;
+- configuração oficial do Ollama em `config/ollama.yaml`, carregada no lifespan por `config_loader.py`;
+- um único `OllamaExecutor` criado no startup, reutilizado entre requests e fechado no shutdown, sem probe de rede;
+- `RuntimeContext` e `OllamaExecutor` publicados em `app.state` e removidos no encerramento;
+- dependencies públicas e tipadas `get_runtime_context(request)` e `get_ollama_executor(request)`;
+- `GET /health/live` como liveness simples e `GET /health/ready` condicionado à validade do contexto e do executor, sem probe Ollama;
+- limite global no ASGI `receive` boundary, antes de FastAPI/Pydantic/Router: 65.536 bytes permitidos e 65.537 bytes rejeitados com HTTP 413 e `REQUEST_TOO_LARGE`;
+- `router_adapter.py` como fronteira HTTP do Router, sem dependência de Dispatcher, Ollama ou responses FastAPI;
+- endpoint funcional `POST /v1/prompt`, compondo Router, Dispatcher/Profile Registry e Ollama Execution;
+- mapeamento seguro de erros HTTP, sem exposição de exceções, prompts internos, hashes, configuração ou payload upstream:
+  - estado `AMBIGUOUS` → HTTP 409;
+  - `UNROUTED` → HTTP 422;
+  - `INVALID_PROFILE` → HTTP 422;
+  - `INTERNAL_ERROR` → HTTP 500;
+  - `MODEL_SERVICE_TIMEOUT` → HTTP 504;
+  - `MODEL_SERVICE_UNAVAILABLE` → HTTP 503;
+  - `MODEL_SERVICE_ERROR` → HTTP 502;
+  - `HTTP_STATUS_ERROR` do Ollama é traduzido para `MODEL_SERVICE_ERROR` → HTTP 502, sem propagar o status upstream;
+- cancelamento assíncrono preservado sem conversão em erro HTTP;
+- integração vertical hermética do caso normativo RT-017/Unity até o boundary Ollama;
 - OpenAPI, Swagger UI e ReDoc explicitamente desabilitados;
 - proteção arquitetural entre núcleo, Application Bootstrap e adaptador HTTP;
 - FastAPI `0.141.1` e HTTPX2 `2.12.0` com versões fixadas;
-- 45 testes específicos da camada HTTP;
-- suíte corrente com 707 testes.
+- suíte corrente com 893 testes, sem failures, skips, xfails, warnings do pytest ou erros de collection.
 
 Próxima etapa planejada:
 
-- concluir o gate final da IMPLEMENTAÇÃO-002.09 e registrar o novo baseline da suíte completa;
-- especificar e implementar o endpoint HTTP funcional para prompts;
-- validar o fluxo vertical completo API → Router → Dispatcher/Profile Registry → Ollama;
-- preparar posteriormente o Public Release Hardening antes da abertura do repositório.
+- executar o Public Release Hardening;
+- concluir o gate Git e de publicação, ainda pendente.
 
 Consulte [docs/ROUTER_007.md](docs/ROUTER_007.md).
 
@@ -132,6 +145,7 @@ Consulte [docs/INSTALLATION.md](docs/INSTALLATION.md) para o procedimento comple
 ```text
 villaz-router/
 ├── config/
+│   ├── ollama.yaml
 │   └── router.yaml
 ├── rules/
 │   ├── profiles.yaml

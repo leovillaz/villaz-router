@@ -34,10 +34,10 @@ Reconciliação entre a especificação consolidada e o repositório:
 ## Validação atual
 
 ```text
-707 passed
+893 passed in 2.43s
 ```
 
-A suíte corrente comprova Router, execução comportamental integral de RT-001–RT-048, Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap determinístico e FastAPI Application Shell com lifecycle fail-fast. Os checkpoints históricos mantêm seus respectivos totais de testes nas seções abaixo.
+A suíte corrente comprova Router, execução comportamental integral de RT-001–RT-048, Profile Registry, Dispatcher, Runtime Compatibility Validator, configuração operacional oficial, Application Bootstrap determinístico e o fluxo vertical HTTP → Router → Dispatcher/Profile Registry → Ollama Execution → HTTP. O gate terminou sem failures, skips, xfails, warnings do pytest ou erros de collection. Os checkpoints históricos mantêm seus respectivos totais de testes nas seções abaixo.
 
 
 
@@ -311,23 +311,43 @@ Implementado e validado localmente:
 - transporte falso utilizado no fluxo integrado, sem TCP, servidor Ollama, GPU ou internet;
 - teste isolado oficial do fluxo integrado aprovado com `1 passed`.
 
-A integração HTTP funcional ainda não faz parte desta implementação. O FastAPI Application Shell permanece sem endpoint de prompts.
+No checkpoint histórico da IMPLEMENTAÇÃO-002.09, a integração HTTP funcional ainda não fazia parte do escopo e o FastAPI Application Shell permanecia sem endpoint de prompts. Essa pendência foi resolvida posteriormente na IMPLEMENTAÇÃO-002.10.
 
-A suíte completa da IMPLEMENTAÇÃO-002.09 foi aprovada com `707 passed` em `2.07s`, estabelecendo o novo baseline corrente do projeto.
+A suíte completa da IMPLEMENTAÇÃO-002.09 foi aprovada com `707 passed` em `2.07s`, baseline histórico substituído pelo gate da IMPLEMENTAÇÃO-002.10.
 
 O fechamento documental, `compileall`, `pip check`, testes específicos, suíte completa, revisão final de diff e publicação Git pertencem ao Bloco 7 desta implementação.
 
+## IMPLEMENTAÇÃO-002.10 — HTTP Functional Prompt Execution — concluída tecnicamente localmente
+
+Implementado e validado localmente:
+
+- configuração oficial `config/ollama.yaml` e loader dedicado;
+- bootstrap do `RuntimeContext` e criação de um único `OllamaExecutor` no lifespan;
+- executor armazenado em `app.state`, reutilizado entre requests e fechado no shutdown;
+- startup sem probe de rede Ollama;
+- readiness dependente de `RuntimeContext` e `OllamaExecutor` válidos, sem probe externo;
+- limite bruto global no ASGI `receive` boundary, antes de FastAPI/Pydantic/Router, permitindo 65.536 bytes e rejeitando 65.537 bytes com HTTP 413 e `REQUEST_TOO_LARGE`;
+- adapter HTTP–Router sem dependência de Dispatcher, Ollama ou response objects do FastAPI;
+- endpoint funcional `POST /v1/prompt`;
+- composição Router → Dispatcher/Profile Registry → `OllamaExecutionRequest` → `OllamaExecutor`;
+- estados `explicit` e `routed` despachados; estado `AMBIGUOUS` → HTTP 409, `UNROUTED` → HTTP 422 e `INVALID_PROFILE` → HTTP 422;
+- mapeamento seguro em `INTERNAL_ERROR` → HTTP 500, `MODEL_SERVICE_TIMEOUT` → HTTP 504, `MODEL_SERVICE_UNAVAILABLE` → HTTP 503 e `MODEL_SERVICE_ERROR` → HTTP 502, sem exposição de detalhes sensíveis;
+- `HTTP_STATUS_ERROR` do Ollama traduzido para `MODEL_SERVICE_ERROR` → HTTP 502, sem propagação do status upstream;
+- propagação de `asyncio.CancelledError` preservada;
+- integração vertical hermética de RT-017/Unity pela API HTTP, substituindo somente o boundary final do Ollama;
+- suíte automatizada sem necessidade de rede ou servidor Ollama real;
+- gate completo aprovado com `893 passed in 2.43s`, sem failures, skips, xfails, warnings do pytest ou erros de collection.
+
+O estado é tecnicamente concluído localmente. Commit, push e publicação da IMPLEMENTAÇÃO-002.10 ainda não foram realizados.
+
 ## Próxima etapa
 
-- concluir o Bloco 7 da IMPLEMENTAÇÃO-002.09 com documentação, gates finais e publicação Git;
-- especificar e implementar posteriormente o endpoint HTTP funcional para prompts;
-- validar o fluxo vertical completo API → Router → Dispatcher/Profile Registry → Ollama.
+- executar o Public Release Hardening;
+- concluir o gate Git e de publicação.
 
 ## Ainda não implementado
 
-- endpoint HTTP funcional para prompts;
-- autenticação, autorização e tratamento HTTP funcional;
+- autenticação e autorização;
 - servidor ASGI e deployment;
-- fluxo vertical completo API → Router → Dispatcher/Profile Registry → Ollama;
 - Orchestrator;
 - Villaz CLI / Villaz Terminal.
