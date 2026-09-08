@@ -27,16 +27,21 @@
 
 - [x] Apache License 2.0 e metadados públicos;
 - [x] CLI pública e package resources;
-- [x] documentação pública reconciliada;
-- [x] hardening de CI e supply chain implementado e validado localmente; execução remota depende da publicação do commit;
-- [ ] commit e push autorizados;
-- [ ] clean clone e clean install final;
-- [ ] validação final de wheel/sdist no estado publicado;
+- [x] documentação pública base reconciliada;
+- [x] hardening de CI e supply chain implementado;
+- [x] commit e push do hardening publicados na `main`;
+- [x] repositório aberto ao público;
+- [x] clean install em ambiente third-party;
+- [x] verificação dos artefatos usados no clean install por SHA-256;
+- [x] E2E operacional com Ollama e modelo real;
+- [x] deployment Linux com `systemd` e restart-on-failure validado;
+- [x] exposição LAN-only controlada por `nftables` validada;
+- [x] reboot acceptance no host de referência;
+- [x] reboot acceptance na VM third-party com health e inferência remota pós-boot;
+- [ ] reconciliar e confirmar CI remoto no estado publicado;
 - [ ] GitHub Private Vulnerability Reporting habilitado e validado;
-- [ ] E2E operacional com Ollama e modelos reais;
-- [ ] publication gate;
-- [ ] tag e release inicial;
-- [ ] abertura pública do repositório.
+- [ ] publication gate final;
+- [ ] tag e release inicial.
 
 ## Evoluções posteriores ao v1
 

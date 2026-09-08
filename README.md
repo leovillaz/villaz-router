@@ -2,9 +2,9 @@
 
 Router determinístico e auditável para selecionar perfis especializados e executar prompts em modelos locais via Ollama. Nenhum LLM participa da decisão de roteamento.
 
-O projeto está em hardening pré-publicação. O baseline completo corrente, validado no host Linux autoritativo após o hardening local, é `914 passed in 2.59s`; o baseline anterior ao hardening foi `893 passed in 2.43s`. O hardening de CI e supply chain está implementado e validado localmente, mas a execução remota no GitHub depende da publicação do commit.
+O repositório está público e o hardening de distribuição foi publicado na `main`. O baseline automatizado corrente permanece `914 passed in 2.59s`. Além da suíte hermética, o deployment Linux de referência e uma instalação limpa em VM Debian 13 foram validados operacionalmente com Ollama real, incluindo persistência após reboot, health checks e inferência HTTP remota pela LAN.
 
-Os gates finais de distribuição e publicação permanecem pendentes.
+Ainda permanecem gates de fechamento antes da release inicial versionada, principalmente a reconciliação final de CI/publication readiness, Private Vulnerability Reporting e tag/release.
 
 ## Como funciona
 
@@ -91,7 +91,7 @@ A árvore externa precisa estar completa. Não há merge nem fallback para os re
 
 ## Segurança
 
-O bind padrão é loopback. `--host 0.0.0.0` é opt-in e pode expor a API, que neste estágio não possui autenticação como mecanismo de proteção. O projeto não deve registrar prompts, respostas, system prompts ou configuração sensível.
+O bind padrão é loopback. `--host 0.0.0.0` é opt-in e pode expor a API, que neste estágio não possui autenticação como mecanismo de proteção. Em deployments LAN-only validados, a exposição deve ser restringida externamente por firewall; não trate o bind em `0.0.0.0` como fronteira de segurança. O projeto não deve registrar prompts, respostas, system prompts ou configuração sensível.
 
 Consulte [SECURITY.md](SECURITY.md) para a política de segurança.
 
