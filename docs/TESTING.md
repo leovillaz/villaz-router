@@ -26,6 +26,8 @@ O baseline completo anterior ao Public Release Hardening foi:
 893 passed in 2.43s
 ```
 
+Esse gate anterior terminou sem failures, skips, xfails, warnings do pytest ou erros de collection.
+
 Durante o hardening de packaging e CLI, um gate focado aprovou `61 testes`. Esse resultado é evidência incremental e não substitui o baseline completo corrente.
 
 O baseline histórico anterior de `707 passed` foi posteriormente substituído por `893 passed in 2.43s`, que por sua vez foi sucedido pelo baseline corrente de 914 testes.
@@ -77,7 +79,7 @@ A cobertura focada verifica:
 
 ### Testes operacionais com Ollama
 
-A validação real permanece separada da suíte hermética e foi executada com sucesso no deployment Linux de referência e em uma instalação limpa em VM Debian 13.
+A validação real permanece separada da suíte hermética e foi executada com sucesso no deployment Linux de referência e em uma instalação independente em VM Debian 13.
 
 Evidências operacionais aprovadas incluem:
 
@@ -85,10 +87,12 @@ Evidências operacionais aprovadas incluem:
 - `POST /v1/prompt` com modelo real;
 - `Restart=on-failure` sob falha abrupta;
 - autostart via `systemd`;
-- persistência de política LAN-only em `nftables`;
-- reboot acceptance;
-- clean install sem checkout Git no runtime;
-- inferência remota pós-reboot na VM third-party com `profile=code-review-security`, `model=qwen2.5-coder:14b` e `state=explicit`.
+- persistência da política LAN-only em `nftables`;
+- reboot acceptance no host de referência;
+- clean install third-party sem checkout Git no runtime;
+- deployment third-party com serviço dedicado e firewall;
+- reboot acceptance na VM third-party;
+- inferência remota pós-reboot com `profile=code-review-security`, `model=qwen2.5-coder:14b` e `state=explicit`.
 
 Os outputs textuais do modelo podem variar e não fazem parte da suíte hermética normal.
 
@@ -100,37 +104,38 @@ Execute apenas os testes diretamente relacionados e as validações estáticas p
 
 ### Suíte completa
 
-Antes de mudanças de release:
+No publication gate:
 
 ```bash
 python -m pytest -q
 ```
 
-O resultado precisa ser registrado como nova evidência somente depois de efetivamente concluir o gate.
+O resultado aprovado está registrado na seção de evidência corrente. Novos resultados devem ser registrados somente depois da execução efetiva de cada gate.
 
 ### Artefatos de distribuição
 
-Wheel e artefatos utilizados no gate de clean install foram verificados por SHA-256 e instalados em ambiente third-party. Qualquer nova build destinada a uma tag/release deve repetir build, inspeção e instalação limpa no estado exato a ser versionado.
+Wheel, lock e `SHA256SUMS` foram validados por SHA-256 e reproduzidos em clean install third-party durante a `IMPLEMENTAÇÃO-002.11`. Como a futura release deve corresponder ao estado exato da tag, qualquer alteração que afete o conteúdo do wheel exige reconstrução do artefato candidato, nova inspeção, novos hashes e nova validação antes da publicação.
 
 ### Publication gate
 
-O gate final deve reunir:
+O publication gate do Public Release Hardening foi aprovado e reuniu:
 
-- suíte completa no estado candidato à release;
-- build de wheel e sdist do estado candidato;
+- suíte completa;
+- build de wheel e sdist;
 - inspeção dos artefatos;
-- clean install reproduzível;
+- clean install;
 - validações de segurança e supply chain;
 - reprodução operacional aprovada;
-- revisão explícita do conteúdo a publicar;
-- confirmação do CI remoto e do canal privado de vulnerabilidades.
+- revisão explícita do conteúdo a publicar.
+
+Esse gate permanece historicamente concluído. A futura tag/GitHub Release exige apenas validar novamente o conjunto exato de artefatos produzido a partir do estado final versionado, sem reabrir o publication gate arquitetural.
 
 ## CI
 
 O workflow oficial `.github/workflows/tests.yml` foi validado remotamente no GitHub Actions sobre o commit `b072d673de99026785f333ab7fdb27610bb1ec51` e terminou com sucesso. Os jobs `source-validation` e `distribution-validation` concluíram integralmente; o segundo incluiu build de wheel/sdist, inspeção dos artefatos e validação do wheel instalado.
 
-O GitHub Private Vulnerability Reporting também foi confirmado habilitado pelo operador. Esses dois requisitos deixam de ser pendências do publication readiness.
+O GitHub Private Vulnerability Reporting também foi confirmado habilitado pelo operador. Esses requisitos não são pendências da primeira release.
 
-A CI normal executa testes automatizados herméticos e não exige Ollama real. E2E com modelos pertence ao gate operacional separado e já possui evidência manual aprovada.
+Os testes automatizados normais permanecem herméticos e não exigem Ollama real. O E2E operacional com Ollama e modelos reais já foi executado como gate separado. Testes adicionais de deployment e portabilidade pertencem à `IMPLEMENTAÇÃO-002.11`.
 
 O requisito declarado é Python 3.13 ou superior, mas a matriz CI atual cobre somente Python 3.13. Compatibilidade com versões posteriores ainda não é validada pela CI.

@@ -2,9 +2,9 @@
 
 Router determinístico e auditável para selecionar perfis especializados e executar prompts em modelos locais via Ollama. Nenhum LLM participa da decisão de roteamento.
 
-O repositório está público e o hardening de distribuição foi publicado na `main`. O baseline automatizado corrente permanece `914 passed in 2.59s`. Além da suíte hermética, o deployment Linux de referência e uma instalação limpa em VM Debian 13 foram validados operacionalmente com Ollama real, incluindo persistência após reboot, health checks e inferência HTTP remota pela LAN.
+O repositório Villaz Router é público. O Public Release Hardening e o publication gate foram concluídos, com baseline completo de `914 passed in 2.59s`.
 
-O CI remoto do workflow oficial foi validado com sucesso no estado publicado e o GitHub Private Vulnerability Reporting está habilitado. Resta executar o publication gate final no host Linux autoritativo antes da primeira tag/release versionada.
+A `IMPLEMENTAÇÃO-002.11 — Operational Deployment & Portability` validou o deployment Linux de referência e uma instalação limpa em VM Debian 13, incluindo systemd, política LAN-only com nftables, persistência após reboot, health checks e inferência HTTP remota com Ollama real. A primeira tag/GitHub Release e os artefatos públicos versionados ainda não foram publicados.
 
 ## Como funciona
 
@@ -38,24 +38,11 @@ Principais características:
 
 O Router não exige GPU. Os requisitos de CPU, memória e VRAM dependem do modelo, da quantização, do contexto e do backend.
 
-## Quickstart
+## Instalação
 
-```bash
-git clone https://github.com/leovillaz/villaz-router
-cd villaz-router
+O fluxo de distribuição por artefatos versionados foi validado durante a `IMPLEMENTAÇÃO-002.11`. A futura GitHub Release fornecerá o wheel `villaz_router-<versão>-py3-none-any.whl`, o lock `requirements-linux-py313.lock` e `SHA256SUMS`; esses artefatos ainda não estão publicados.
 
-python -m venv .venv
-python -m pip install -e .
-villaz-router serve
-```
-
-O comando equivalente é:
-
-```bash
-python -m villaz_router serve
-```
-
-Por padrão, o servidor escuta em `127.0.0.1:8000` e usa somente a configuração empacotada. Consulte o [guia de instalação](docs/INSTALLATION.md) para preparar o Ollama e os modelos.
+Para trabalhar a partir do source tree, consulte o [guia de desenvolvimento](docs/DEVELOPMENT.md). O contrato de instalação, incluindo o fluxo de release candidate, preparação do Ollama e inicialização da API, está no [guia de instalação](docs/INSTALLATION.md).
 
 ## Primeiro prompt
 

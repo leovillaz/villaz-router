@@ -27,25 +27,36 @@
 
 - [x] Apache License 2.0 e metadados públicos;
 - [x] CLI pública e package resources;
-- [x] documentação pública base reconciliada;
-- [x] hardening de CI e supply chain implementado;
+- [x] documentação pública reconciliada;
+- [x] hardening de CI e supply chain, incluindo execução remota bem-sucedida no GitHub;
 - [x] commit e push do hardening publicados na `main`;
-- [x] repositório aberto ao público;
-- [x] clean install em ambiente third-party;
-- [x] verificação dos artefatos usados no clean install por SHA-256;
-- [x] E2E operacional com Ollama e modelo real;
-- [x] deployment Linux com `systemd` e restart-on-failure validado;
-- [x] exposição LAN-only controlada por `nftables` validada;
-- [x] reboot acceptance no host de referência;
-- [x] reboot acceptance na VM third-party com health e inferência remota pós-boot;
-- [x] CI remoto no estado publicado validado;
+- [x] clean clone e clean install do Public Release Hardening;
+- [x] validação de wheel/sdist do Public Release Hardening;
 - [x] GitHub Private Vulnerability Reporting habilitado e validado;
-- [ ] publication gate final;
-- [ ] tag e release inicial.
+- [x] E2E operacional com Ollama e modelos reais;
+- [x] publication gate;
+- [x] abertura pública do repositório;
+- [ ] tag e GitHub Release inicial.
+
+## Operational Deployment & Portability
+
+- [x] Linux reference deployment;
+- [x] systemd e identidade operacional;
+- [x] autostart, restart e stop semantics;
+- [x] bind LAN e firewall;
+- [x] health e diagnóstico;
+- [x] reboot acceptance e inferência real pós-reboot;
+- [x] third-party clean install em Debian 13;
+- [x] third-party deployment com systemd e nftables;
+- [x] reboot acceptance third-party com health e inferência remota pós-boot;
+- [ ] publicação dos artefatos da release inicial;
+- [ ] Windows nativo e WSL2;
+- [ ] Docker/Compose;
+- [ ] documentação e gate final de deployment/portabilidade.
 
 ## Evoluções posteriores ao v1
 
-Somente após o publication gate:
+Com o publication gate já aprovado, permanecem como evoluções futuras:
 
 - Orchestrator para workflows multi-profile;
 - Villaz Terminal e expansão da experiência de CLI;

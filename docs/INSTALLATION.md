@@ -4,7 +4,9 @@ O Villaz Router requer Python 3.13 ou superior. Uvicorn é uma dependência norm
 
 Ollama é um serviço externo. O projeto não instala Ollama, não baixa modelos e não executa model pull automaticamente.
 
-## A. Desenvolvimento a partir do clone
+## A. Desenvolvimento a partir do clone — não é a distribuição oficial
+
+Este fluxo é destinado a desenvolvimento, contribuição e replicação a partir do source tree. Ele não representa o caminho oficial de distribuição para usuário final.
 
 Obtenha o código:
 
@@ -37,15 +39,35 @@ Instale o projeto em modo editável com dependências de desenvolvimento:
 python -m pip install -e ".[dev]"
 ```
 
-## B. Instalação como distribuição Python
+## B. Distribuição versionada — release candidate
 
-A instalação não editável diretamente do diretório do projeto é:
+O fluxo de distribuição aprovado prevê estes artefatos em uma futura GitHub Release:
+
+- `villaz_router-<versão>-py3-none-any.whl`;
+- `requirements-linux-py313.lock`;
+- `SHA256SUMS`.
+
+A matriz atualmente comprovada é Linux x86_64 com CPython 3.13.x.
+
+O fluxo de instalação do release candidate foi validado em ambiente virtual limpo no host de referência e reproduzido em uma VM Debian 13 independente, sem checkout Git no runtime:
 
 ```bash
-python -m pip install .
+python -m venv .venv
+.venv/bin/python -m pip install 'pip==26.2.1'
+.venv/bin/python -m pip install \
+  --require-hashes \
+  -r requirements-linux-py313.lock
+.venv/bin/python -m pip install \
+  --no-deps \
+  villaz_router-<versão>-py3-none-any.whl
+.venv/bin/python -m pip check
 ```
 
-O metadata do projeto também está preparado para wheel e sdist, mas o build e o clean install desses artefatos ainda pertencem ao gate de distribuição. Não há publicação PyPI nem validação final de artefato declarada neste estágio.
+As dependências são instaladas primeiro pelo lock, com versões fixadas e hashes verificados pelo `pip`. Em seguida, o wheel é instalado com `--no-deps` para impedir uma nova resolução de dependências. `SHA256SUMS` permite verificar a integridade dos artefatos da release.
+
+Ollama continua sendo um serviço externo. O Villaz Router não depende de publicação própria no PyPI; nesta baseline, a instalação online das dependências utiliza o índice `https://pypi.org/simple`. Instalação offline não é uma garantia desta fase.
+
+Os artefatos públicos da GitHub Release ainda **não** estão publicados. O fluxo de distribuição foi validado durante a `IMPLEMENTAÇÃO-002.11`, incluindo clean install em ambiente third-party.
 
 ## Preparar o Ollama
 
