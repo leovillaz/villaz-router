@@ -127,6 +127,10 @@ O gate final deve reunir:
 
 ## CI
 
-A CI normal deve executar testes automatizados herméticos e não exigir Ollama real. O hardening de CI e supply chain está publicado na `main`; a reconciliação final deve confirmar os runs remotos do workflow relevante no estado candidato à release. E2E com modelos pertence ao gate operacional separado e já possui evidência manual aprovada.
+O workflow oficial `.github/workflows/tests.yml` foi validado remotamente no GitHub Actions sobre o commit `b072d673de99026785f333ab7fdb27610bb1ec51` e terminou com sucesso. Os jobs `source-validation` e `distribution-validation` concluíram integralmente; o segundo incluiu build de wheel/sdist, inspeção dos artefatos e validação do wheel instalado.
+
+O GitHub Private Vulnerability Reporting também foi confirmado habilitado pelo operador. Esses dois requisitos deixam de ser pendências do publication readiness.
+
+A CI normal executa testes automatizados herméticos e não exige Ollama real. E2E com modelos pertence ao gate operacional separado e já possui evidência manual aprovada.
 
 O requisito declarado é Python 3.13 ou superior, mas a matriz CI atual cobre somente Python 3.13. Compatibilidade com versões posteriores ainda não é validada pela CI.

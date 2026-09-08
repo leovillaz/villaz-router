@@ -38,8 +38,8 @@
 - [x] exposição LAN-only controlada por `nftables` validada;
 - [x] reboot acceptance no host de referência;
 - [x] reboot acceptance na VM third-party com health e inferência remota pós-boot;
-- [ ] reconciliar e confirmar CI remoto no estado publicado;
-- [ ] GitHub Private Vulnerability Reporting habilitado e validado;
+- [x] CI remoto no estado publicado validado;
+- [x] GitHub Private Vulnerability Reporting habilitado e validado;
 - [ ] publication gate final;
 - [ ] tag e release inicial.
 

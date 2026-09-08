@@ -4,7 +4,7 @@ Router determinístico e auditável para selecionar perfis especializados e exec
 
 O repositório está público e o hardening de distribuição foi publicado na `main`. O baseline automatizado corrente permanece `914 passed in 2.59s`. Além da suíte hermética, o deployment Linux de referência e uma instalação limpa em VM Debian 13 foram validados operacionalmente com Ollama real, incluindo persistência após reboot, health checks e inferência HTTP remota pela LAN.
 
-Ainda permanecem gates de fechamento antes da release inicial versionada, principalmente a reconciliação final de CI/publication readiness, Private Vulnerability Reporting e tag/release.
+O CI remoto do workflow oficial foi validado com sucesso no estado publicado e o GitHub Private Vulnerability Reporting está habilitado. Resta executar o publication gate final no host Linux autoritativo antes da primeira tag/release versionada.
 
 ## Como funciona
 

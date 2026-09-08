@@ -53,23 +53,30 @@ A reprodução operacional foi validada além da suíte hermética:
 - a inferência pós-reboot confirmou `profile=code-review-security`, `model=qwen2.5-coder:14b` e `state=explicit`;
 - contador `nftables` e journal confirmaram tráfego LAN externo real após o reboot.
 
+## GitHub publication readiness
+
+Também estão validados:
+
+- workflow oficial `.github/workflows/tests.yml` executado por `push` no commit `b072d673de99026785f333ab7fdb27610bb1ec51` com `conclusion=success`;
+- job `source-validation` concluído com sucesso;
+- job `distribution-validation` concluído com sucesso, incluindo build de wheel/sdist, inspeção dos artefatos e validação do wheel instalado;
+- GitHub Private Vulnerability Reporting confirmado habilitado no repositório.
+
 ## Publication readiness
 
 Estado geral:
 
 ```text
-PUBLIC_REPOSITORY_RELEASE_GATE_OPEN
+FINAL_PUBLICATION_GATE_PENDING
 ```
 
-O repositório já está público e o hardening de distribuição foi publicado na `main`. Os gates de clean install e E2E operacional com Ollama real foram executados com sucesso. Isso não equivale ainda a uma release inicial versionada.
+O repositório já está público, o hardening de distribuição está publicado, o CI remoto está validado, o canal privado de vulnerabilidades está habilitado e os gates de clean install/E2E operacional foram aprovados.
 
 Permanecem para fechamento formal:
 
-- reconciliar e confirmar a execução remota do CI no estado publicado;
-- confirmar/validar o GitHub Private Vulnerability Reporting como canal efetivamente disponível;
-- executar o publication gate final com a documentação já reconciliada;
-- criar a tag e a release inicial quando o gate for aprovado.
+- executar o publication gate final no host Linux autoritativo;
+- criar a tag e a release inicial quando esse gate for aprovado.
 
 ## Próximo passo
 
-Fechar os itens restantes de publication readiness e, somente então, materializar a primeira tag/release. Consulte [ROADMAP.md](ROADMAP.md) e [TESTING.md](TESTING.md).
+Executar o publication gate final no `villaz-lab`, consolidando suíte completa, build/inspeção dos artefatos candidatos à release, hashes e reconciliação final. Somente após aprovação explícita criar tag/release. Consulte [ROADMAP.md](ROADMAP.md) e [TESTING.md](TESTING.md).
