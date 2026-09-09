@@ -15,6 +15,7 @@ from villaz_router.http_api.models import (
     ErrorEnvelope,
     ErrorResponse,
     LivenessResponse,
+    PromptMetrics,
     PromptRequest,
     PromptResponse,
     ReadinessResponse,
@@ -203,12 +204,27 @@ async def post_prompt(
             execution_request
         )
 
+        tokens_per_second = (
+            execution_result.output_tokens
+            / (
+                execution_result.generation_duration_ns
+                / 1_000_000_000
+            )
+        )
+
         return PromptResponse(
             response=execution_result.response_text,
             profile=dispatch_plan.profile_id,
             model=execution_result.model,
             state=dispatch_plan.source_state.value,
             route_id=dispatch_plan.route_id,
+            metrics=PromptMetrics(
+                output_tokens=execution_result.output_tokens,
+                generation_duration_ns=(
+                    execution_result.generation_duration_ns
+                ),
+                tokens_per_second=tokens_per_second,
+            ),
         )
     except (RouterError, DispatcherError, RegistryError):
         return _public_error_response(*_INTERNAL_ERROR)

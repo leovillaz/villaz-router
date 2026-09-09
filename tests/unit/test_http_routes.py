@@ -170,6 +170,8 @@ class RecordingOllamaExecutor:
         self.result = result or OllamaExecutionResult(
             model="qwen3:8b",
             response_text="Generated response.",
+            output_tokens=42,
+            generation_duration_ns=1_500_000_000,
         )
         self.error = error
         self.requests: list[OllamaExecutionRequest] = []
@@ -606,6 +608,8 @@ def test_prompt_success_returns_exact_public_response(
         result=OllamaExecutionResult(
             model="qwen3:8b",
             response_text="Public generated response.",
+            output_tokens=42,
+            generation_duration_ns=1_500_000_000,
         )
     )
     app = make_prompt_app(runtime_context, executor)
@@ -634,6 +638,11 @@ def test_prompt_success_returns_exact_public_response(
         "model": "qwen3:8b",
         "state": state.value,
         "route_id": expected_route_id,
+        "metrics": {
+            "output_tokens": 42,
+            "generation_duration_ns": 1_500_000_000,
+            "tokens_per_second": 28.0,
+        },
     }
     serialized = response.text
     assert "SENSITIVE_SYSTEM_PROMPT" not in serialized

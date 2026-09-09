@@ -33,6 +33,8 @@ def make_execution_result() -> OllamaExecutionResult:
     return OllamaExecutionResult(
         model="gemma3:12b",
         response_text="Architecture explanation.",
+        output_tokens=42,
+        generation_duration_ns=1_500_000_000,
     )
 
 
@@ -51,6 +53,8 @@ def make_execution_result() -> OllamaExecutionResult:
             {
                 "model",
                 "response_text",
+                "output_tokens",
+                "generation_duration_ns",
             },
         ),
     ],
@@ -108,6 +112,8 @@ def test_execution_result_preserves_exact_text() -> None:
     result = OllamaExecutionResult(
         model=model,
         response_text=response_text,
+        output_tokens=42,
+        generation_duration_ns=1_500_000_000,
     )
 
     assert result.model == model
@@ -115,6 +121,8 @@ def test_execution_result_preserves_exact_text() -> None:
     assert result.model_dump(mode="json") == {
         "model": model,
         "response_text": response_text,
+        "output_tokens": 42,
+        "generation_duration_ns": 1_500_000_000,
     }
 
 
@@ -163,6 +171,8 @@ def test_execution_result_forbids_extra_fields() -> None:
         OllamaExecutionResult.model_validate({
             "model": "gemma3:12b",
             "response_text": "Response.",
+            "output_tokens": 42,
+            "generation_duration_ns": 1_500_000_000,
             "unexpected": True,
         })
 
@@ -179,17 +189,28 @@ def test_execution_request_requires_all_fields() -> None:
         })
 
 
-def test_execution_result_requires_all_fields() -> None:
-    with pytest.raises(ValidationError):
-        OllamaExecutionResult.model_validate({
-            "model": "gemma3:12b",
-        })
+@pytest.mark.parametrize(
+    "missing_field",
+    [
+        "model",
+        "response_text",
+        "output_tokens",
+        "generation_duration_ns",
+    ],
+)
+def test_execution_result_requires_all_fields(
+    missing_field: str,
+) -> None:
+    values: dict[str, Any] = {
+        "model": "gemma3:12b",
+        "response_text": "Response.",
+        "output_tokens": 42,
+        "generation_duration_ns": 1_500_000_000,
+    }
+    del values[missing_field]
 
     with pytest.raises(ValidationError):
-        OllamaExecutionResult.model_validate({
-            "response_text": "Response.",
-        })
-
+        OllamaExecutionResult.model_validate(values)
 
 @pytest.mark.parametrize(
     "invalid_dispatch_plan",
@@ -264,9 +285,11 @@ def test_execution_result_rejects_empty_required_text(
     field_name: str,
     invalid_value: str,
 ) -> None:
-    values = {
+    values: dict[str, Any] = {
         "model": "gemma3:12b",
         "response_text": "Response.",
+        "output_tokens": 42,
+        "generation_duration_ns": 1_500_000_000,
     }
     values[field_name] = invalid_value
 
@@ -297,8 +320,75 @@ def test_execution_result_requires_exact_string_types(
     values: dict[str, Any] = {
         "model": "gemma3:12b",
         "response_text": "Response.",
+        "output_tokens": 42,
+        "generation_duration_ns": 1_500_000_000,
     }
     values[field_name] = invalid_value
 
     with pytest.raises(ValidationError):
         OllamaExecutionResult.model_validate(values)
+
+@pytest.mark.parametrize(
+    ("field_name", "invalid_value"),
+    [
+        ("output_tokens", -1),
+        ("generation_duration_ns", 0),
+        ("generation_duration_ns", -1),
+    ],
+)
+def test_execution_result_rejects_invalid_generation_metrics(
+    field_name: str,
+    invalid_value: int,
+) -> None:
+    values: dict[str, Any] = {
+        "model": "gemma3:12b",
+        "response_text": "Response.",
+        "output_tokens": 42,
+        "generation_duration_ns": 1_500_000_000,
+    }
+    values[field_name] = invalid_value
+
+    with pytest.raises(ValidationError):
+        OllamaExecutionResult.model_validate(values)
+
+@pytest.mark.parametrize(
+    "invalid_value",
+    [
+        True,
+        1.0,
+        "42",
+        None,
+    ],
+)
+@pytest.mark.parametrize(
+    "field_name",
+    [
+        "output_tokens",
+        "generation_duration_ns",
+    ],
+)
+def test_execution_result_requires_exact_integer_metrics(
+    field_name: str,
+    invalid_value: Any,
+) -> None:
+    values: dict[str, Any] = {
+        "model": "gemma3:12b",
+        "response_text": "Response.",
+        "output_tokens": 42,
+        "generation_duration_ns": 1_500_000_000,
+    }
+    values[field_name] = invalid_value
+
+    with pytest.raises(ValidationError):
+        OllamaExecutionResult.model_validate(values)
+
+def test_execution_result_accepts_zero_output_tokens() -> None:
+    result = OllamaExecutionResult(
+        model="gemma3:12b",
+        response_text="Response.",
+        output_tokens=0,
+        generation_duration_ns=1,
+    )
+
+    assert result.output_tokens == 0
+    assert result.generation_duration_ns == 1

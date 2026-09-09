@@ -196,10 +196,38 @@ class OllamaExecutor:
                 "ollama generation did not complete",
             )
 
+        eval_count = response.get("eval_count")
+
+        if (
+            type(eval_count) is not int
+            or eval_count < 0
+        ):
+            _raise_invalid_response(
+                OllamaExecutionErrorCode
+                .INVALID_RESPONSE,
+                "ollama response contains an invalid "
+                "eval count",
+            )
+
+        eval_duration = response.get("eval_duration")
+
+        if (
+            type(eval_duration) is not int
+            or eval_duration <= 0
+        ):
+            _raise_invalid_response(
+                OllamaExecutionErrorCode
+                .INVALID_RESPONSE,
+                "ollama response contains an invalid "
+                "eval duration",
+            )
+
         try:
             return OllamaExecutionResult(
                 model=response_model,
                 response_text=response_text,
+                output_tokens=eval_count,
+                generation_duration_ns=eval_duration,
             )
         except ValidationError as exc:
             raise OllamaExecutionError(

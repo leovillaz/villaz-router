@@ -47,6 +47,8 @@ def make_valid_response() -> dict[str, object]:
         "model": "gemma3:12b",
         "response": "Generated response.",
         "done": True,
+        "eval_count": 42,
+        "eval_duration": 1_500_000_000,
     }
 
 _USE_VALID_RESPONSE = object()
@@ -150,6 +152,8 @@ async def test_execute_sends_exact_payload() -> None:
     assert result == OllamaExecutionResult(
         model="gemma3:12b",
         response_text="Generated response.",
+        output_tokens=42,
+        generation_duration_ns=1_500_000_000,
     )
 
 
@@ -176,6 +180,8 @@ async def test_execute_preserves_exact_sensitive_text() -> None:
         "model": "gemma3:12b",
         "response": response_text,
         "done": True,
+        "eval_count": 42,
+        "eval_duration": 1_500_000_000,
         "ignored_metadata": {
             "duration": 123,
         },
@@ -583,6 +589,141 @@ async def test_execute_requires_done_field() -> None:
         OllamaExecutionErrorCode.INVALID_RESPONSE
     )
 
+@pytest.mark.parametrize(
+    "missing_field",
+    [
+        "eval_count",
+        "eval_duration",
+    ],
+)
+@pytest.mark.anyio
+async def test_execute_requires_generation_metrics(
+    missing_field: str,
+) -> None:
+    response = make_valid_response()
+    del response[missing_field]
+    transport = FakeTransport(response)
+    executor = OllamaExecutor(transport)
+
+    with pytest.raises(
+        OllamaExecutionError
+    ) as exc_info:
+        await executor.execute(make_request())
+
+    error = exc_info.value
+
+    assert error.code is (
+        OllamaExecutionErrorCode.INVALID_RESPONSE
+    )
+    assert error.stage is (
+        OllamaExecutionStage.OLLAMA_RESPONSE
+    )
+
+
+@pytest.mark.parametrize(
+    "invalid_value",
+    [
+        None,
+        True,
+        False,
+        1.0,
+        "42",
+        [],
+        {},
+    ],
+)
+@pytest.mark.parametrize(
+    "field_name",
+    [
+        "eval_count",
+        "eval_duration",
+    ],
+)
+@pytest.mark.anyio
+async def test_execute_requires_exact_integer_generation_metrics(
+    field_name: str,
+    invalid_value: Any,
+) -> None:
+    response = make_valid_response()
+    response[field_name] = invalid_value
+    transport = FakeTransport(response)
+    executor = OllamaExecutor(transport)
+
+    with pytest.raises(
+        OllamaExecutionError
+    ) as exc_info:
+        await executor.execute(make_request())
+
+    error = exc_info.value
+
+    assert error.code is (
+        OllamaExecutionErrorCode.INVALID_RESPONSE
+    )
+    assert error.stage is (
+        OllamaExecutionStage.OLLAMA_RESPONSE
+    )
+
+
+@pytest.mark.anyio
+async def test_execute_rejects_negative_eval_count() -> None:
+    response = make_valid_response()
+    response["eval_count"] = -1
+    transport = FakeTransport(response)
+    executor = OllamaExecutor(transport)
+
+    with pytest.raises(
+        OllamaExecutionError
+    ) as exc_info:
+        await executor.execute(make_request())
+
+    assert exc_info.value.code is (
+        OllamaExecutionErrorCode.INVALID_RESPONSE
+    )
+    assert exc_info.value.stage is (
+        OllamaExecutionStage.OLLAMA_RESPONSE
+    )
+
+
+@pytest.mark.parametrize(
+    "invalid_duration",
+    [
+        0,
+        -1,
+    ],
+)
+@pytest.mark.anyio
+async def test_execute_rejects_non_positive_eval_duration(
+    invalid_duration: int,
+) -> None:
+    response = make_valid_response()
+    response["eval_duration"] = invalid_duration
+    transport = FakeTransport(response)
+    executor = OllamaExecutor(transport)
+
+    with pytest.raises(
+        OllamaExecutionError
+    ) as exc_info:
+        await executor.execute(make_request())
+
+    assert exc_info.value.code is (
+        OllamaExecutionErrorCode.INVALID_RESPONSE
+    )
+    assert exc_info.value.stage is (
+        OllamaExecutionStage.OLLAMA_RESPONSE
+    )
+
+@pytest.mark.anyio
+async def test_execute_accepts_zero_eval_count() -> None:
+    response = make_valid_response()
+    response["eval_count"] = 0
+    response["eval_duration"] = 1
+    transport = FakeTransport(response)
+    executor = OllamaExecutor(transport)
+
+    result = await executor.execute(make_request())
+
+    assert result.output_tokens == 0
+    assert result.generation_duration_ns == 1
 
 @pytest.mark.anyio
 async def test_execute_rejects_incomplete_generation() -> None:

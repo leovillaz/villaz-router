@@ -4,6 +4,8 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    StrictFloat,
+    StrictInt,
     StrictStr,
     field_validator,
     model_validator,
@@ -25,6 +27,67 @@ class ReadinessResponse(BaseModel):
     )
 
     status: Literal["ready", "not_ready"] = "ready"
+
+class PromptMetrics(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        strict=True,
+    )
+
+    output_tokens: StrictInt
+    generation_duration_ns: StrictInt
+    tokens_per_second: StrictFloat
+
+    @field_validator("output_tokens")
+    @classmethod
+    def validate_output_tokens(
+        cls,
+        value: int,
+    ) -> int:
+        if value < 0:
+            raise ValueError(
+                "output_tokens must be greater than "
+                "or equal to zero"
+            )
+
+        return value
+
+    @field_validator("generation_duration_ns")
+    @classmethod
+    def validate_generation_duration_ns(
+        cls,
+        value: int,
+    ) -> int:
+        if value <= 0:
+            raise ValueError(
+                "generation_duration_ns must be "
+                "greater than zero"
+            )
+
+        return value
+
+    @field_validator(
+        "tokens_per_second",
+        mode="before",
+    )
+    @classmethod
+    def validate_tokens_per_second(
+        cls,
+        value: object,
+    ) -> object:
+        if type(value) is not float:
+            raise ValueError(
+                "tokens_per_second must be an exact float"
+            )
+
+        if value < 0:
+            raise ValueError(
+                "tokens_per_second must be greater than "
+                "or equal to zero"
+            )
+
+        return value
 
 class PromptRequest(BaseModel):
     model_config = ConfigDict(
@@ -86,6 +149,7 @@ class PromptResponse(BaseModel):
     model: StrictStr
     state: Literal["explicit", "routed"]
     route_id: StrictStr | None
+    metrics: PromptMetrics
 
     @field_validator(
         "response",

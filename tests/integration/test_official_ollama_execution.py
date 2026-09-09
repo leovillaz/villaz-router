@@ -99,6 +99,8 @@ class InspectingFakeOllamaTransport:
             "model": self._dispatch_plan.model,
             "response": FAKE_RESPONSE_TEXT,
             "done": True,
+            "eval_count": 42,
+            "eval_duration": 1_500_000_000,
         }
 
     async def aclose(self) -> None:
@@ -172,7 +174,8 @@ async def test_official_route_reaches_ollama_execution_without_network() -> None
         assert isinstance(result, OllamaExecutionResult)
         assert result.model == dispatch_plan.model
         assert result.response_text == FAKE_RESPONSE_TEXT
-
+        assert result.output_tokens == 42
+        assert result.generation_duration_ns == 1_500_000_000
         assert transport.generate_calls == 1
         assert transport.payload_validated is True
         assert transport.close_calls == 0

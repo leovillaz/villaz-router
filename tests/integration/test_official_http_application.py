@@ -211,6 +211,8 @@ def test_official_prompt_executes_explicit_profile(
         return OllamaExecutionResult(
             model=request.dispatch_plan.model,
             response_text="Explicit generated response.",
+            output_tokens=42,
+            generation_duration_ns=1_500_000_000,
         )
 
     monkeypatch.setattr(
@@ -238,6 +240,11 @@ def test_official_prompt_executes_explicit_profile(
         "model": plan.model,
         "state": "explicit",
         "route_id": None,
+        "metrics": {
+            "output_tokens": 42,
+            "generation_duration_ns": 1_500_000_000,
+            "tokens_per_second": 28.0,
+        },
     }
     assert plan.profile_id == "mobile-dev"
     assert plan.route_id is None
@@ -257,6 +264,8 @@ def test_official_prompt_executes_deterministic_routed_profile(
         return OllamaExecutionResult(
             model=request.dispatch_plan.model,
             response_text="Routed generated response.",
+            output_tokens=42,
+            generation_duration_ns=1_500_000_000,
         )
 
     monkeypatch.setattr(
@@ -283,6 +292,11 @@ def test_official_prompt_executes_deterministic_routed_profile(
         "model": plan.model,
         "state": "routed",
         "route_id": plan.route_id,
+        "metrics": {
+            "output_tokens": 42,
+            "generation_duration_ns": 1_500_000_000,
+            "tokens_per_second": 28.0,
+        },
     }
     assert plan.profile_id == "code-review-security"
     assert plan.route_id is not None
@@ -313,6 +327,8 @@ def test_official_prompt_executes_normative_rt_017_unity_case(
         return OllamaExecutionResult(
             model=request.dispatch_plan.model,
             response_text=generated_response,
+            output_tokens=42,
+            generation_duration_ns=1_500_000_000,
         )
 
     monkeypatch.setattr(
@@ -368,6 +384,11 @@ def test_official_prompt_executes_normative_rt_017_unity_case(
         "model": official_profile.model,
         "state": expected_state,
         "route_id": official_route.id,
+        "metrics": {
+            "output_tokens": 42,
+            "generation_duration_ns": 1_500_000_000,
+            "tokens_per_second": 28.0,
+        },
     }
 
     serialized = response.text
@@ -545,6 +566,8 @@ def test_official_prompt_responses_expose_no_dispatch_internals(
         return OllamaExecutionResult(
             model=request.dispatch_plan.model,
             response_text="Public response.",
+            output_tokens=42,
+            generation_duration_ns=1_500_000_000,
         )
 
     monkeypatch.setattr(

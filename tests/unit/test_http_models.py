@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from villaz_router.http_api.models import (
     LivenessResponse,
+    PromptMetrics,
     PromptRequest,
     PromptResponse,
     ReadinessResponse,
@@ -320,6 +321,131 @@ def test_prompt_request_is_frozen() -> None:
     with pytest.raises(ValidationError):
         request.message = "alterada"
 
+
+def make_prompt_metrics() -> PromptMetrics:
+    return PromptMetrics(
+        output_tokens=42,
+        generation_duration_ns=1_500_000_000,
+        tokens_per_second=28.0,
+    )
+
+
+def test_prompt_metrics_has_exact_contract() -> None:
+    assert set(PromptMetrics.model_fields) == {
+        "output_tokens",
+        "generation_duration_ns",
+        "tokens_per_second",
+    }
+    assert PromptMetrics.model_config["extra"] == "forbid"
+    assert PromptMetrics.model_config["frozen"] is True
+    assert PromptMetrics.model_config["strict"] is True
+    assert all(
+        field.is_required()
+        for field in PromptMetrics.model_fields.values()
+    )
+
+
+def test_prompt_metrics_preserves_exact_values() -> None:
+    metrics = make_prompt_metrics()
+
+    assert metrics.model_dump(mode="json") == {
+        "output_tokens": 42,
+        "generation_duration_ns": 1_500_000_000,
+        "tokens_per_second": 28.0,
+    }
+
+
+@pytest.mark.parametrize(
+    ("field_name", "invalid_value"),
+    [
+        ("output_tokens", -1),
+        ("generation_duration_ns", 0),
+        ("generation_duration_ns", -1),
+        ("tokens_per_second", -0.1),
+    ],
+)
+def test_prompt_metrics_rejects_invalid_values(
+    field_name: str,
+    invalid_value: int | float,
+) -> None:
+    values: dict[str, Any] = {
+        "output_tokens": 42,
+        "generation_duration_ns": 1_500_000_000,
+        "tokens_per_second": 28.0,
+    }
+    values[field_name] = invalid_value
+
+    with pytest.raises(ValidationError):
+        PromptMetrics.model_validate(values)
+
+
+@pytest.mark.parametrize(
+    ("field_name", "invalid_value"),
+    [
+        ("output_tokens", True),
+        ("output_tokens", 42.0),
+        ("output_tokens", "42"),
+        ("generation_duration_ns", True),
+        ("generation_duration_ns", 1.5),
+        ("generation_duration_ns", "1500000000"),
+        ("tokens_per_second", True),
+        ("tokens_per_second", 28),
+        ("tokens_per_second", "28.0"),
+    ],
+)
+def test_prompt_metrics_requires_exact_numeric_types(
+    field_name: str,
+    invalid_value: Any,
+) -> None:
+    values: dict[str, Any] = {
+        "output_tokens": 42,
+        "generation_duration_ns": 1_500_000_000,
+        "tokens_per_second": 28.0,
+    }
+    values[field_name] = invalid_value
+
+    with pytest.raises(ValidationError):
+        PromptMetrics.model_validate(values)
+
+
+@pytest.mark.parametrize(
+    "missing_field",
+    [
+        "output_tokens",
+        "generation_duration_ns",
+        "tokens_per_second",
+    ],
+)
+def test_prompt_metrics_requires_all_fields(
+    missing_field: str,
+) -> None:
+    values: dict[str, Any] = {
+        "output_tokens": 42,
+        "generation_duration_ns": 1_500_000_000,
+        "tokens_per_second": 28.0,
+    }
+    del values[missing_field]
+
+    with pytest.raises(ValidationError):
+        PromptMetrics.model_validate(values)
+
+
+def test_prompt_metrics_forbids_extra_fields() -> None:
+    with pytest.raises(ValidationError):
+        PromptMetrics.model_validate({
+            "output_tokens": 42,
+            "generation_duration_ns": 1_500_000_000,
+            "tokens_per_second": 28.0,
+            "unexpected": True,
+        })
+
+
+def test_prompt_metrics_is_frozen() -> None:
+    metrics = make_prompt_metrics()
+
+    with pytest.raises(ValidationError):
+        metrics.output_tokens = 43
+
 def test_prompt_response_has_exact_contract() -> None:
     assert set(PromptResponse.model_fields) == {
         "response",
@@ -327,6 +453,7 @@ def test_prompt_response_has_exact_contract() -> None:
         "model",
         "state",
         "route_id",
+        "metrics",
     }
     assert PromptResponse.model_config["extra"] == "forbid"
     assert PromptResponse.model_config["frozen"] is True
@@ -337,7 +464,10 @@ def test_prompt_response_has_exact_contract() -> None:
         ]
         is False
     )
-
+    assert all(
+        field.is_required()
+        for field in PromptResponse.model_fields.values()
+    )
 
 @pytest.mark.parametrize(
     ("state", "route_id"),
@@ -356,6 +486,7 @@ def test_prompt_response_accepts_valid_state_contract(
         model="modelo-local",
         state=state,
         route_id=route_id,
+        metrics=make_prompt_metrics(),
     )
 
     assert response.state == state
@@ -369,6 +500,7 @@ def test_prompt_response_preserves_exact_response_text() -> None:
         model="modelo-local",
         state="explicit",
         route_id=None,
+        metrics=make_prompt_metrics(),
     )
 
     assert response.response == "  resposta exata  "
@@ -401,6 +533,7 @@ def test_prompt_response_rejects_empty_required_text(
         "model": "modelo-local",
         "state": "explicit",
         "route_id": None,
+        "metrics": make_prompt_metrics(),
     }
     payload[field_name] = invalid_value
 
@@ -415,6 +548,7 @@ def test_prompt_response_rejects_whitespace_route_id() -> None:
             model="modelo-local",
             state="routed",
             route_id=" ",
+            metrics=make_prompt_metrics(),
         )
 
 def test_prompt_response_requires_route_for_routed() -> None:
@@ -425,6 +559,7 @@ def test_prompt_response_requires_route_for_routed() -> None:
             model="modelo-local",
             state="routed",
             route_id=None,
+            metrics=make_prompt_metrics(),
         )
 
 def test_prompt_response_forbids_route_for_explicit() -> None:
@@ -435,6 +570,7 @@ def test_prompt_response_forbids_route_for_explicit() -> None:
             model="modelo-local",
             state="explicit",
             route_id="ROUTE-UNITY-001",
+            metrics=make_prompt_metrics(),
         )
 
 @pytest.mark.parametrize(
@@ -456,6 +592,7 @@ def test_prompt_response_rejects_non_success_state(
             model="modelo-local",
             state=invalid_state,
             route_id=None,
+            metrics=make_prompt_metrics(),
         )
 
 
@@ -479,8 +616,20 @@ def test_prompt_response_forbids_internal_fields() -> None:
                 "model": "modelo-local",
                 "state": "explicit",
                 "route_id": None,
+                "metrics": make_prompt_metrics(),
                 field_name: "forbidden",
             })
+
+
+def test_prompt_response_requires_metrics() -> None:
+    with pytest.raises(ValidationError):
+        PromptResponse.model_validate({
+            "response": "Resposta",
+            "profile": "unity-dev",
+            "model": "modelo-local",
+            "state": "explicit",
+            "route_id": None,
+        })
 
 
 def test_prompt_response_is_frozen() -> None:
@@ -490,10 +639,12 @@ def test_prompt_response_is_frozen() -> None:
         model="modelo-local",
         state="explicit",
         route_id=None,
+        metrics=make_prompt_metrics(),
     )
 
     with pytest.raises(ValidationError):
         response.response = "alterada"
+
 
 def test_ambiguous_candidate_has_exact_contract() -> None:
     assert set(AmbiguousCandidate.model_fields) == {

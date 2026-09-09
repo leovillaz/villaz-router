@@ -1,6 +1,7 @@
 from pydantic import (
     BaseModel,
     ConfigDict,
+    StrictInt,
     StrictStr,
     field_validator,
 )
@@ -61,6 +62,8 @@ class OllamaExecutionResult(BaseModel):
 
     model: StrictStr
     response_text: StrictStr
+    output_tokens: StrictInt
+    generation_duration_ns: StrictInt
 
     @field_validator(
         "model",
@@ -75,6 +78,30 @@ class OllamaExecutionResult(BaseModel):
             raise ValueError(
                 "value must not be empty "
                 "or whitespace-only"
+            )
+
+        return value
+
+    @field_validator(
+        "output_tokens",
+        "generation_duration_ns",
+    )
+    @classmethod
+    def validate_generation_metrics(
+        cls,
+        value: int,
+        info,
+    ) -> int:
+        if info.field_name == "output_tokens":
+            if value < 0:
+                raise ValueError(
+                    "output_tokens must be greater than "
+                    "or equal to zero"
+                )
+        elif value <= 0:
+            raise ValueError(
+                "generation_duration_ns must be "
+                "greater than zero"
             )
 
         return value
