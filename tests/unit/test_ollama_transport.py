@@ -10,15 +10,20 @@ from villaz_router.ollama_execution.transport import (
 
 class FakeOllamaTransport:
     def __init__(self) -> None:
-        self.payloads: list[dict[str, object]] = []
+        self.payloads: list[
+            dict[str, object]
+        ] = []
         self.closed = False
         self.response: object = {
             "model": "gemma3:12b",
-            "response": "Generated response.",
+            "message": {
+                "role": "assistant",
+                "content": "Generated response.",
+            },
             "done": True,
         }
 
-    async def generate(
+    async def chat(
         self,
         payload: dict[str, object],
     ) -> object:
@@ -30,31 +35,31 @@ class FakeOllamaTransport:
 
 
 def test_transport_protocol_has_exact_async_contract() -> None:
-    generate_signature = inspect.signature(
-        OllamaTransport.generate
+    chat_signature = inspect.signature(
+        OllamaTransport.chat
     )
     close_signature = inspect.signature(
         OllamaTransport.aclose
     )
 
     assert tuple(
-        generate_signature.parameters
+        chat_signature.parameters
     ) == (
         "self",
         "payload",
     )
     assert (
-        generate_signature.parameters[
+        chat_signature.parameters[
             "payload"
         ].annotation
         == dict[str, object]
     )
     assert (
-        generate_signature.return_annotation
+        chat_signature.return_annotation
         is object
     )
     assert inspect.iscoroutinefunction(
-        OllamaTransport.generate
+        OllamaTransport.chat
     )
 
     assert tuple(
@@ -81,18 +86,26 @@ def test_structural_transport_implements_protocol() -> None:
 
 
 @pytest.mark.anyio
-async def test_transport_generate_preserves_payload_identity() -> None:
+async def test_transport_chat_preserves_payload_identity() -> None:
     transport = FakeOllamaTransport()
+
     payload: dict[str, object] = {
         "model": "gemma3:12b",
-        "system": "Canonical system prompt.",
-        "prompt": "User prompt.",
+        "messages": [
+            {
+                "role": "system",
+                "content": "Canonical system prompt.",
+            },
+            {
+                "role": "user",
+                "content": "User prompt.",
+            },
+        ],
         "stream": False,
-        "raw": False,
         "think": False,
     }
 
-    result = await transport.generate(payload)
+    result = await transport.chat(payload)
 
     assert result is transport.response
     assert transport.payloads == [payload]

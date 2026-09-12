@@ -120,17 +120,37 @@ class OllamaExecutor:
 
         dispatch_plan = request.dispatch_plan
 
+        messages: list[dict[str, str]] = [
+            {
+                "role": "system",
+                "content": dispatch_plan.system_prompt,
+            },
+        ]
+
+        for turn in request.history:
+            messages.append({
+                "role": "user",
+                "content": turn.user,
+            })
+            messages.append({
+                "role": "assistant",
+                "content": turn.assistant,
+            })
+
+        messages.append({
+            "role": "user",
+            "content": request.user_prompt,
+        })
+
         payload: dict[str, object] = {
             "model": dispatch_plan.model,
-            "system": dispatch_plan.system_prompt,
-            "prompt": request.user_prompt,
+            "messages": messages,
             "stream": False,
-            "raw": False,
             "think": False,
         }
 
         try:
-            response = await self._transport.generate(
+            response = await self._transport.chat(
                 payload
             )
         except OllamaTransportError as exc:
@@ -163,7 +183,29 @@ class OllamaExecutor:
                 "the dispatch plan",
             )
 
-        response_text = response.get("response")
+        response_message = response.get("message")
+
+        if not isinstance(response_message, Mapping):
+            _raise_invalid_response(
+                OllamaExecutionErrorCode
+                .INVALID_RESPONSE,
+                "ollama response contains an invalid "
+                "message",
+            )
+
+        response_role = response_message.get("role")
+
+        if response_role != "assistant":
+            _raise_invalid_response(
+                OllamaExecutionErrorCode
+                .INVALID_RESPONSE,
+                "ollama response contains an invalid "
+                "message role",
+            )
+
+        response_text = response_message.get(
+            "content"
+        )
 
         if not isinstance(response_text, str):
             _raise_invalid_response(

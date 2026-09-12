@@ -42,7 +42,7 @@ def make_ollama_config() -> OllamaClientConfig:
 
 
 class FakeOllamaTransport:
-    async def generate(
+    async def chat(
         self,
         payload: dict[str, object],
     ) -> dict[str, object]:
@@ -86,11 +86,13 @@ def assert_runtime_context_absent(
     with pytest.raises(AttributeError):
         app.state.runtime_context
 
+
 def assert_ollama_executor_absent(
     app: FastAPI,
 ) -> None:
     with pytest.raises(AttributeError):
         app.state.ollama_executor
+
 
 def test_create_app_has_exact_sync_contract_and_is_pure(
     monkeypatch: pytest.MonkeyPatch,
@@ -541,6 +543,7 @@ def test_lifespan_composes_ollama_startup_in_exact_order(
             config,
         ),
     ]
+
 
 def test_lifespan_closes_executor_once(
     monkeypatch: pytest.MonkeyPatch,

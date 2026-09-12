@@ -30,10 +30,8 @@ EXPECTED_ROUTE_ID = "ROUTE-UNITY-001"
 
 EXPECTED_PAYLOAD_KEYS = {
     "model",
-    "system",
-    "prompt",
+    "messages",
     "stream",
-    "raw",
     "think",
 }
 
@@ -48,15 +46,15 @@ class InspectingFakeOllamaTransport:
     ) -> None:
         self._dispatch_plan = dispatch_plan
         self._user_prompt = user_prompt
-        self.generate_calls = 0
+        self.chat_calls = 0
         self.close_calls = 0
         self.payload_validated = False
 
-    async def generate(
+    async def chat(
         self,
         payload: Mapping[str, object],
     ) -> object:
-        self.generate_calls += 1
+        self.chat_calls += 1
 
         if set(payload) != EXPECTED_PAYLOAD_KEYS:
             raise AssertionError(
@@ -68,24 +66,32 @@ class InspectingFakeOllamaTransport:
                 "dispatch model changed before reaching transport"
             )
 
-        if payload["system"] != self._dispatch_plan.system_prompt:
+        messages = payload["messages"]
+
+        if not isinstance(messages, list):
             raise AssertionError(
-                "system prompt changed before reaching transport"
+                "messages must be a list"
             )
 
-        if payload["prompt"] != self._user_prompt:
+        expected_messages = [
+            {
+                "role": "system",
+                "content": self._dispatch_plan.system_prompt,
+            },
+            {
+                "role": "user",
+                "content": self._user_prompt,
+            },
+        ]
+
+        if messages != expected_messages:
             raise AssertionError(
-                "user prompt changed before reaching transport"
+                "structured messages changed before reaching transport"
             )
 
         if payload["stream"] is not False:
             raise AssertionError(
                 "stream must be exactly false"
-            )
-
-        if payload["raw"] is not False:
-            raise AssertionError(
-                "raw must be exactly false"
             )
 
         if payload["think"] is not False:
@@ -97,7 +103,10 @@ class InspectingFakeOllamaTransport:
 
         return {
             "model": self._dispatch_plan.model,
-            "response": FAKE_RESPONSE_TEXT,
+            "message": {
+                "role": "assistant",
+                "content": FAKE_RESPONSE_TEXT,
+            },
             "done": True,
             "eval_count": 42,
             "eval_duration": 1_500_000_000,
@@ -154,6 +163,11 @@ async def test_official_route_reaches_ollama_execution_without_network() -> None
             "execution request did not preserve DispatchPlan identity"
         )
 
+    if execution_request.history != ():
+        raise AssertionError(
+            "single-turn execution request must have empty history"
+        )
+
     if execution_request.user_prompt != USER_PROMPT:
         raise AssertionError(
             "execution request changed the original user prompt"
@@ -176,7 +190,7 @@ async def test_official_route_reaches_ollama_execution_without_network() -> None
         assert result.response_text == FAKE_RESPONSE_TEXT
         assert result.output_tokens == 42
         assert result.generation_duration_ns == 1_500_000_000
-        assert transport.generate_calls == 1
+        assert transport.chat_calls == 1
         assert transport.payload_validated is True
         assert transport.close_calls == 0
 

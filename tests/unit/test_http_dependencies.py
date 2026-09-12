@@ -33,13 +33,14 @@ def make_request(app: FastAPI) -> Request:
         "app": app,
     })
 
+
 class FakeOllamaTransport:
-    async def generate(
+    async def chat(
         self,
         payload: dict[str, object],
     ) -> dict[str, object]:
         raise AssertionError(
-            "generate must not be called"
+            "chat must not be called"
         )
 
     async def aclose(self) -> None:
@@ -50,6 +51,7 @@ def make_ollama_executor() -> OllamaExecutor:
     return OllamaExecutor(
         FakeOllamaTransport()
     )
+
 
 def test_get_runtime_context_has_exact_sync_contract() -> None:
     signature = inspect.signature(get_runtime_context)
@@ -143,6 +145,7 @@ def test_invalid_runtime_context_type_raises_type_error(
         "a RuntimeContext instance"
     )
     assert error.__cause__ is None
+
 
 def test_get_ollama_executor_has_exact_sync_contract() -> None:
     signature = inspect.signature(

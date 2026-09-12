@@ -9,6 +9,35 @@ from pydantic import (
 from villaz_router.dispatcher_models import DispatchPlan
 
 
+class OllamaExecutionTurn(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        strict=True,
+        str_strip_whitespace=False,
+    )
+
+    user: StrictStr
+    assistant: StrictStr
+
+    @field_validator(
+        "user",
+        "assistant",
+    )
+    @classmethod
+    def validate_required_text(
+        cls,
+        value: str,
+    ) -> str:
+        if value.strip() == "":
+            raise ValueError(
+                "value must not be empty "
+                "or whitespace-only"
+            )
+
+        return value
+
+
 class OllamaExecutionRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -18,6 +47,7 @@ class OllamaExecutionRequest(BaseModel):
     )
 
     dispatch_plan: DispatchPlan
+    history: tuple[OllamaExecutionTurn, ...] = ()
     user_prompt: StrictStr
 
     @field_validator(
@@ -33,6 +63,34 @@ class OllamaExecutionRequest(BaseModel):
             raise ValueError(
                 "dispatch_plan must be a "
                 "DispatchPlan instance"
+            )
+
+        return value
+
+    @field_validator(
+        "history",
+        mode="before",
+    )
+    @classmethod
+    def validate_history_type(
+        cls,
+        value: object,
+    ) -> object:
+        if type(value) is not tuple:
+            raise ValueError(
+                "history must be a tuple"
+            )
+
+        if not all(
+            isinstance(
+                turn,
+                OllamaExecutionTurn,
+            )
+            for turn in value
+        ):
+            raise ValueError(
+                "history must contain only "
+                "OllamaExecutionTurn instances"
             )
 
         return value

@@ -23,6 +23,7 @@ from villaz_router.ollama_execution.factory import (
 from villaz_router.ollama_execution.models import (
     OllamaExecutionRequest,
     OllamaExecutionResult,
+    OllamaExecutionTurn,
 )
 from villaz_router.ollama_execution.transport import OllamaTransport
 
@@ -52,6 +53,7 @@ EXPECTED_EXPORTS = [
     "OllamaExecutionRequest",
     "OllamaExecutionResult",
     "OllamaExecutionStage",
+    "OllamaExecutionTurn",
     "OllamaExecutor",
     "OllamaTimeoutConfig",
     "OllamaTransport",
@@ -68,6 +70,7 @@ EXPECTED_SYMBOLS = {
     "OllamaExecutionRequest": OllamaExecutionRequest,
     "OllamaExecutionResult": OllamaExecutionResult,
     "OllamaExecutionStage": OllamaExecutionStage,
+    "OllamaExecutionTurn": OllamaExecutionTurn,
     "OllamaExecutor": OllamaExecutor,
     "OllamaTimeoutConfig": OllamaTimeoutConfig,
     "OllamaTransport": OllamaTransport,
@@ -241,13 +244,14 @@ def test_config_loader_has_exact_import_boundary() -> None:
     }
 
 
-def test_only_generate_endpoint_is_present() -> None:
+def test_only_chat_endpoint_is_present() -> None:
     source = "\n".join(
         path.read_text(encoding="utf-8")
         for path in OLLAMA_ROOT.glob("*.py")
     )
 
-    assert source.count("/api/generate") == 1
+    assert source.count("/api/chat") == 1
+    assert "/api/generate" not in source
 
     for forbidden_endpoint in (
         "/api/version",

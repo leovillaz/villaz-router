@@ -8,6 +8,7 @@ from villaz_router.models import RouteState
 from villaz_router.ollama_execution.models import (
     OllamaExecutionRequest,
     OllamaExecutionResult,
+    OllamaExecutionTurn,
 )
 
 
@@ -45,6 +46,7 @@ def make_execution_result() -> OllamaExecutionResult:
             OllamaExecutionRequest,
             {
                 "dispatch_plan",
+                "history",
                 "user_prompt",
             },
         ),
@@ -57,29 +59,77 @@ def make_execution_result() -> OllamaExecutionResult:
                 "generation_duration_ns",
             },
         ),
+        (
+            OllamaExecutionTurn,
+            {
+                "user",
+                "assistant",
+            },
+        ),
     ],
 )
 def test_execution_models_have_exact_contract(
     model_type: type[
         OllamaExecutionRequest
         | OllamaExecutionResult
+        | OllamaExecutionTurn
     ],
     expected_fields: set[str],
 ) -> None:
-    assert set(model_type.model_fields) == expected_fields
-    assert model_type.model_config["extra"] == "forbid"
-    assert model_type.model_config["frozen"] is True
-    assert model_type.model_config["strict"] is True
+    assert set(
+        model_type.model_fields
+    ) == expected_fields
+
+    assert (
+        model_type.model_config["extra"]
+        == "forbid"
+    )
+    assert (
+        model_type.model_config["frozen"]
+        is True
+    )
+    assert (
+        model_type.model_config["strict"]
+        is True
+    )
     assert (
         model_type.model_config[
             "str_strip_whitespace"
         ]
         is False
     )
-    assert all(
-        field.is_required()
-        for field in model_type.model_fields.values()
-    )
+
+    if model_type is OllamaExecutionRequest:
+        assert (
+            model_type.model_fields[
+                "dispatch_plan"
+            ].is_required()
+            is True
+        )
+        assert (
+            model_type.model_fields[
+                "user_prompt"
+            ].is_required()
+            is True
+        )
+        assert (
+            model_type.model_fields[
+                "history"
+            ].is_required()
+            is False
+        )
+        assert (
+            model_type.model_fields[
+                "history"
+            ].default
+            == ()
+        )
+    else:
+        assert all(
+            field.is_required()
+            for field
+            in model_type.model_fields.values()
+        )
 
 
 def test_execution_request_preserves_values_and_identity() -> None:
@@ -94,11 +144,16 @@ def test_execution_request_preserves_values_and_identity() -> None:
     )
 
     assert request.dispatch_plan is dispatch_plan
+    assert request.history == ()
     assert request.user_prompt == user_prompt
+
     assert request.model_dump(mode="json") == {
         "dispatch_plan": (
-            dispatch_plan.model_dump(mode="json")
+            dispatch_plan.model_dump(
+                mode="json"
+            )
         ),
+        "history": [],
         "user_prompt": user_prompt,
     }
 
@@ -118,11 +173,30 @@ def test_execution_result_preserves_exact_text() -> None:
 
     assert result.model == model
     assert result.response_text == response_text
+
     assert result.model_dump(mode="json") == {
         "model": model,
         "response_text": response_text,
         "output_tokens": 42,
         "generation_duration_ns": 1_500_000_000,
+    }
+
+
+def test_execution_turn_preserves_exact_text() -> None:
+    user = "  Question exactly.\n"
+    assistant = "  Answer exactly.\n"
+
+    turn = OllamaExecutionTurn(
+        user=user,
+        assistant=assistant,
+    )
+
+    assert turn.user == user
+    assert turn.assistant == assistant
+
+    assert turn.model_dump(mode="json") == {
+        "user": user,
+        "assistant": assistant,
     }
 
 
@@ -139,12 +213,21 @@ def test_execution_result_preserves_exact_text() -> None:
             "response_text",
             "changed",
         ),
+        (
+            OllamaExecutionTurn(
+                user="Question.",
+                assistant="Answer.",
+            ),
+            "user",
+            "changed",
+        ),
     ],
 )
 def test_execution_models_are_frozen(
     instance: (
         OllamaExecutionRequest
         | OllamaExecutionResult
+        | OllamaExecutionTurn
     ),
     field_name: str,
     new_value: str,
@@ -177,15 +260,24 @@ def test_execution_result_forbids_extra_fields() -> None:
         })
 
 
-def test_execution_request_requires_all_fields() -> None:
+def test_execution_turn_forbids_extra_fields() -> None:
+    with pytest.raises(ValidationError):
+        OllamaExecutionTurn.model_validate({
+            "user": "Question.",
+            "assistant": "Answer.",
+            "unexpected": True,
+        })
+
+
+def test_execution_request_requires_all_required_fields() -> None:
     with pytest.raises(ValidationError):
         OllamaExecutionRequest.model_validate({
-            "dispatch_plan": make_dispatch_plan(),
+            "user_prompt": "Prompt.",
         })
 
     with pytest.raises(ValidationError):
         OllamaExecutionRequest.model_validate({
-            "user_prompt": "Prompt.",
+            "dispatch_plan": make_dispatch_plan(),
         })
 
 
@@ -210,7 +302,32 @@ def test_execution_result_requires_all_fields(
     del values[missing_field]
 
     with pytest.raises(ValidationError):
-        OllamaExecutionResult.model_validate(values)
+        OllamaExecutionResult.model_validate(
+            values
+        )
+
+
+@pytest.mark.parametrize(
+    "missing_field",
+    [
+        "user",
+        "assistant",
+    ],
+)
+def test_execution_turn_requires_all_fields(
+    missing_field: str,
+) -> None:
+    values = {
+        "user": "Question.",
+        "assistant": "Answer.",
+    }
+    del values[missing_field]
+
+    with pytest.raises(ValidationError):
+        OllamaExecutionTurn.model_validate(
+            values
+        )
+
 
 @pytest.mark.parametrize(
     "invalid_dispatch_plan",
@@ -294,7 +411,9 @@ def test_execution_result_rejects_empty_required_text(
     values[field_name] = invalid_value
 
     with pytest.raises(ValidationError):
-        OllamaExecutionResult.model_validate(values)
+        OllamaExecutionResult.model_validate(
+            values
+        )
 
 
 @pytest.mark.parametrize(
@@ -326,7 +445,10 @@ def test_execution_result_requires_exact_string_types(
     values[field_name] = invalid_value
 
     with pytest.raises(ValidationError):
-        OllamaExecutionResult.model_validate(values)
+        OllamaExecutionResult.model_validate(
+            values
+        )
+
 
 @pytest.mark.parametrize(
     ("field_name", "invalid_value"),
@@ -349,7 +471,10 @@ def test_execution_result_rejects_invalid_generation_metrics(
     values[field_name] = invalid_value
 
     with pytest.raises(ValidationError):
-        OllamaExecutionResult.model_validate(values)
+        OllamaExecutionResult.model_validate(
+            values
+        )
+
 
 @pytest.mark.parametrize(
     "invalid_value",
@@ -380,7 +505,10 @@ def test_execution_result_requires_exact_integer_metrics(
     values[field_name] = invalid_value
 
     with pytest.raises(ValidationError):
-        OllamaExecutionResult.model_validate(values)
+        OllamaExecutionResult.model_validate(
+            values
+        )
+
 
 def test_execution_result_accepts_zero_output_tokens() -> None:
     result = OllamaExecutionResult(
@@ -392,3 +520,133 @@ def test_execution_result_accepts_zero_output_tokens() -> None:
 
     assert result.output_tokens == 0
     assert result.generation_duration_ns == 1
+
+
+@pytest.mark.parametrize(
+    ("field_name", "invalid_value"),
+    [
+        ("user", ""),
+        ("user", " "),
+        ("user", "\t\n"),
+        ("assistant", ""),
+        ("assistant", " "),
+        ("assistant", "\t\n"),
+    ],
+)
+def test_execution_turn_rejects_empty_required_text(
+    field_name: str,
+    invalid_value: str,
+) -> None:
+    values = {
+        "user": "Question.",
+        "assistant": "Answer.",
+    }
+    values[field_name] = invalid_value
+
+    with pytest.raises(ValidationError):
+        OllamaExecutionTurn.model_validate(
+            values
+        )
+
+
+@pytest.mark.parametrize(
+    ("field_name", "invalid_value"),
+    [
+        ("user", 1),
+        ("user", True),
+        ("user", b"question"),
+        ("user", None),
+        ("assistant", 1),
+        ("assistant", True),
+        ("assistant", b"answer"),
+        ("assistant", None),
+    ],
+)
+def test_execution_turn_requires_exact_strings(
+    field_name: str,
+    invalid_value: Any,
+) -> None:
+    values: dict[str, Any] = {
+        "user": "Question.",
+        "assistant": "Answer.",
+    }
+    values[field_name] = invalid_value
+
+    with pytest.raises(ValidationError):
+        OllamaExecutionTurn.model_validate(
+            values
+        )
+
+
+def test_execution_request_defaults_to_empty_history() -> None:
+    request = make_execution_request()
+
+    assert request.history == ()
+
+
+def test_execution_request_preserves_history_order_and_turn_identity() -> None:
+    first = OllamaExecutionTurn(
+        user="Question 1.",
+        assistant="Answer 1.",
+    )
+    second = OllamaExecutionTurn(
+        user="Question 2.",
+        assistant="Answer 2.",
+    )
+
+    history = (
+        first,
+        second,
+    )
+
+    request = OllamaExecutionRequest(
+        dispatch_plan=make_dispatch_plan(),
+        history=history,
+        user_prompt="Question 3.",
+    )
+
+    assert request.history == history
+    assert request.history[0] is first
+    assert request.history[1] is second
+
+
+@pytest.mark.parametrize(
+    "invalid_history",
+    [
+        [],
+        {},
+        "invalid",
+        None,
+    ],
+)
+def test_execution_request_requires_tuple_history(
+    invalid_history: Any,
+) -> None:
+    with pytest.raises(ValidationError):
+        OllamaExecutionRequest(
+            dispatch_plan=make_dispatch_plan(),
+            history=invalid_history,
+            user_prompt="Prompt.",
+        )
+
+
+@pytest.mark.parametrize(
+    "invalid_turn",
+    [
+        {
+            "user": "Q",
+            "assistant": "A",
+        },
+        "invalid",
+        object(),
+    ],
+)
+def test_execution_request_requires_turn_instances(
+    invalid_turn: Any,
+) -> None:
+    with pytest.raises(ValidationError):
+        OllamaExecutionRequest(
+            dispatch_plan=make_dispatch_plan(),
+            history=(invalid_turn,),
+            user_prompt="Prompt.",
+        )

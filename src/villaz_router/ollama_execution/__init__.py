@@ -17,6 +17,7 @@ from villaz_router.ollama_execution.factory import (
 from villaz_router.ollama_execution.models import (
     OllamaExecutionRequest,
     OllamaExecutionResult,
+    OllamaExecutionTurn,
 )
 from villaz_router.ollama_execution.transport import OllamaTransport
 
@@ -29,6 +30,7 @@ __all__ = [
     "OllamaExecutionRequest",
     "OllamaExecutionResult",
     "OllamaExecutionStage",
+    "OllamaExecutionTurn",
     "OllamaExecutor",
     "OllamaTimeoutConfig",
     "OllamaTransport",

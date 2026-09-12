@@ -30,13 +30,13 @@ class Httpx2OllamaTransport:
     ) -> None:
         self._client = client
 
-    async def generate(
+    async def chat(
         self,
         payload: dict[str, object],
     ) -> object:
         try:
             response = await self._client.post(
-                "/api/generate",
+                "/api/chat",
                 json=payload,
             )
         except httpx2.ConnectTimeout as exc:

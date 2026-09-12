@@ -21,6 +21,7 @@ from villaz_router.ollama_execution.executor import (
 from villaz_router.ollama_execution.models import (
     OllamaExecutionRequest,
     OllamaExecutionResult,
+    OllamaExecutionTurn,
 )
 
 
@@ -45,11 +46,15 @@ def make_request() -> OllamaExecutionRequest:
 def make_valid_response() -> dict[str, object]:
     return {
         "model": "gemma3:12b",
-        "response": "Generated response.",
+        "message": {
+            "role": "assistant",
+            "content": "Generated response.",
+        },
         "done": True,
         "eval_count": 42,
         "eval_duration": 1_500_000_000,
     }
+
 
 _USE_VALID_RESPONSE = object()
 
@@ -71,7 +76,7 @@ class FakeTransport:
         ] = []
         self.close_calls = 0
 
-    async def generate(
+    async def chat(
         self,
         payload: dict[str, object],
     ) -> object:
@@ -143,10 +148,17 @@ async def test_execute_sends_exact_payload() -> None:
 
     assert transport.payloads == [{
         "model": "gemma3:12b",
-        "system": "Canonical system prompt.",
-        "prompt": "Explain the architecture.",
+        "messages": [
+            {
+                "role": "system",
+                "content": "Canonical system prompt.",
+            },
+            {
+                "role": "user",
+                "content": "Explain the architecture.",
+            },
+        ],
         "stream": False,
-        "raw": False,
         "think": False,
     }]
     assert result == OllamaExecutionResult(
@@ -155,6 +167,60 @@ async def test_execute_sends_exact_payload() -> None:
         output_tokens=42,
         generation_duration_ns=1_500_000_000,
     )
+
+
+@pytest.mark.anyio
+async def test_execute_sends_history_in_exact_order() -> None:
+    request = OllamaExecutionRequest(
+        dispatch_plan=make_dispatch_plan(),
+        history=(
+            OllamaExecutionTurn(
+                user="Question 1.",
+                assistant="Answer 1.",
+            ),
+            OllamaExecutionTurn(
+                user="Question 2.",
+                assistant="Answer 2.",
+            ),
+        ),
+        user_prompt="Question 3.",
+    )
+    transport = FakeTransport()
+    executor = OllamaExecutor(transport)
+
+    await executor.execute(request)
+
+    assert transport.payloads == [{
+        "model": "gemma3:12b",
+        "messages": [
+            {
+                "role": "system",
+                "content": "Canonical system prompt.",
+            },
+            {
+                "role": "user",
+                "content": "Question 1.",
+            },
+            {
+                "role": "assistant",
+                "content": "Answer 1.",
+            },
+            {
+                "role": "user",
+                "content": "Question 2.",
+            },
+            {
+                "role": "assistant",
+                "content": "Answer 2.",
+            },
+            {
+                "role": "user",
+                "content": "Question 3.",
+            },
+        ],
+        "stream": False,
+        "think": False,
+    }]
 
 
 @pytest.mark.anyio
@@ -178,7 +244,10 @@ async def test_execute_preserves_exact_sensitive_text() -> None:
     )
     transport = FakeTransport({
         "model": "gemma3:12b",
-        "response": response_text,
+        "message": {
+            "role": "assistant",
+            "content": response_text,
+        },
         "done": True,
         "eval_count": 42,
         "eval_duration": 1_500_000_000,
@@ -190,12 +259,18 @@ async def test_execute_preserves_exact_sensitive_text() -> None:
 
     result = await executor.execute(request)
 
-    assert transport.payloads[0]["system"] == (
-        "  SENSITIVE_SYSTEM_PROMPT\n"
-    )
-    assert transport.payloads[0]["prompt"] == (
-        "  SENSITIVE_USER_PROMPT\n"
-    )
+    messages = transport.payloads[0]["messages"]
+
+    assert messages == [
+        {
+            "role": "system",
+            "content": "  SENSITIVE_SYSTEM_PROMPT\n",
+        },
+        {
+            "role": "user",
+            "content": "  SENSITIVE_USER_PROMPT\n",
+        },
+    ]
     assert result.response_text == response_text
 
 
@@ -322,10 +397,17 @@ async def test_execute_translates_transport_errors(
     assert error.__cause__ is transport_error
     assert transport.payloads == [{
         "model": "gemma3:12b",
-        "system": "Canonical system prompt.",
-        "prompt": "Explain the architecture.",
+        "messages": [
+            {
+                "role": "system",
+                "content": "Canonical system prompt.",
+            },
+            {
+                "role": "user",
+                "content": "Explain the architecture.",
+            },
+        ],
         "stream": False,
-        "raw": False,
         "think": False,
     }]
 
@@ -485,6 +567,133 @@ async def test_execute_rejects_model_mismatch_first() -> None:
 
 
 @pytest.mark.parametrize(
+    "invalid_message",
+    [
+        None,
+        [],
+        "invalid",
+        1,
+        True,
+    ],
+)
+@pytest.mark.anyio
+async def test_execute_requires_mapping_message(
+    invalid_message: Any,
+) -> None:
+    response = make_valid_response()
+    response["message"] = invalid_message
+
+    transport = FakeTransport(response)
+    executor = OllamaExecutor(transport)
+
+    with pytest.raises(
+        OllamaExecutionError
+    ) as exc_info:
+        await executor.execute(make_request())
+
+    assert exc_info.value.code is (
+        OllamaExecutionErrorCode.INVALID_RESPONSE
+    )
+
+
+@pytest.mark.anyio
+async def test_execute_requires_message_field() -> None:
+    response = make_valid_response()
+    del response["message"]
+
+    transport = FakeTransport(response)
+    executor = OllamaExecutor(transport)
+
+    with pytest.raises(
+        OllamaExecutionError
+    ) as exc_info:
+        await executor.execute(make_request())
+
+    assert exc_info.value.code is (
+        OllamaExecutionErrorCode.INVALID_RESPONSE
+    )
+
+
+@pytest.mark.parametrize(
+    "invalid_role",
+    [
+        None,
+        "",
+        "user",
+        "system",
+        1,
+        True,
+    ],
+)
+@pytest.mark.anyio
+async def test_execute_requires_assistant_message_role(
+    invalid_role: Any,
+) -> None:
+    response = make_valid_response()
+
+    message = response["message"]
+    assert isinstance(message, dict)
+
+    message["role"] = invalid_role
+
+    transport = FakeTransport(response)
+    executor = OllamaExecutor(transport)
+
+    with pytest.raises(
+        OllamaExecutionError
+    ) as exc_info:
+        await executor.execute(make_request())
+
+    assert exc_info.value.code is (
+        OllamaExecutionErrorCode.INVALID_RESPONSE
+    )
+
+
+@pytest.mark.anyio
+async def test_execute_requires_message_role_field() -> None:
+    response = make_valid_response()
+
+    message = response["message"]
+    assert isinstance(message, dict)
+
+    del message["role"]
+
+    transport = FakeTransport(response)
+    executor = OllamaExecutor(transport)
+
+    with pytest.raises(
+        OllamaExecutionError
+    ) as exc_info:
+        await executor.execute(make_request())
+
+    assert exc_info.value.code is (
+        OllamaExecutionErrorCode.INVALID_RESPONSE
+    )
+
+
+@pytest.mark.anyio
+async def test_execute_requires_message_content_field() -> None:
+    response = make_valid_response()
+
+    message = response["message"]
+    assert isinstance(message, dict)
+
+    del message["content"]
+
+    transport = FakeTransport(response)
+    executor = OllamaExecutor(transport)
+
+    with pytest.raises(
+        OllamaExecutionError
+    ) as exc_info:
+        await executor.execute(make_request())
+
+    assert exc_info.value.code is (
+        OllamaExecutionErrorCode.INVALID_RESPONSE
+    )
+
+
+@pytest.mark.parametrize(
     "invalid_text",
     [
         None,
@@ -499,7 +708,12 @@ async def test_execute_requires_string_response_text(
     invalid_text: Any,
 ) -> None:
     response = make_valid_response()
-    response["response"] = invalid_text
+
+    message = response["message"]
+    assert isinstance(message, dict)
+
+    message["content"] = invalid_text
+
     transport = FakeTransport(response)
     executor = OllamaExecutor(transport)
 
@@ -528,8 +742,13 @@ async def test_execute_rejects_empty_response_text(
     empty_text: str,
 ) -> None:
     response = make_valid_response()
-    response["response"] = empty_text
+
+    message = response["message"]
+    assert isinstance(message, dict)
+
+    message["content"] = empty_text
     response["done"] = False
+
     transport = FakeTransport(response)
     executor = OllamaExecutor(transport)
 
@@ -588,6 +807,7 @@ async def test_execute_requires_done_field() -> None:
     assert exc_info.value.code is (
         OllamaExecutionErrorCode.INVALID_RESPONSE
     )
+
 
 @pytest.mark.parametrize(
     "missing_field",
@@ -712,6 +932,7 @@ async def test_execute_rejects_non_positive_eval_duration(
         OllamaExecutionStage.OLLAMA_RESPONSE
     )
 
+
 @pytest.mark.anyio
 async def test_execute_accepts_zero_eval_count() -> None:
     response = make_valid_response()
@@ -724,6 +945,7 @@ async def test_execute_accepts_zero_eval_count() -> None:
 
     assert result.output_tokens == 0
     assert result.generation_duration_ns == 1
+
 
 @pytest.mark.anyio
 async def test_execute_rejects_incomplete_generation() -> None:
@@ -789,6 +1011,7 @@ async def test_result_validation_failure_is_wrapped(
     )
     assert error.cause is expected_error
     assert error.__cause__ is expected_error
+
 
 @pytest.mark.anyio
 async def test_aclose_is_idempotent() -> None:
@@ -886,7 +1109,7 @@ async def test_cancellation_is_not_translated() -> None:
     ] = []
 
     class BlockingTransport(FakeTransport):
-        async def generate(
+        async def chat(
             self,
             payload: dict[str, object],
         ) -> object:

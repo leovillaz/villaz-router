@@ -37,10 +37,17 @@ def make_client(
 def make_payload() -> dict[str, object]:
     return {
         "model": "gemma3:12b",
-        "system": "SENSITIVE_SYSTEM_PROMPT",
-        "prompt": "SENSITIVE_USER_PROMPT",
+        "messages": [
+            {
+                "role": "system",
+                "content": "SENSITIVE_SYSTEM_PROMPT",
+            },
+            {
+                "role": "user",
+                "content": "SENSITIVE_USER_PROMPT",
+            },
+        ],
         "stream": False,
-        "raw": False,
         "think": False,
     }
 
@@ -61,7 +68,7 @@ def test_httpx2_transport_implements_protocol() -> None:
 
 
 @pytest.mark.anyio
-async def test_generate_uses_exact_endpoint_and_payload() -> None:
+async def test_chat_uses_exact_endpoint_and_payload() -> None:
     requests: list[httpx2.Request] = []
 
     def handler(
@@ -73,7 +80,10 @@ async def test_generate_uses_exact_endpoint_and_payload() -> None:
             200,
             json={
                 "model": "gemma3:12b",
-                "response": "Generated response.",
+                "message": {
+                    "role": "assistant",
+                    "content": "Generated response.",
+                },
                 "done": True,
                 "total_duration": 123,
             },
@@ -84,7 +94,7 @@ async def test_generate_uses_exact_endpoint_and_payload() -> None:
     payload = make_payload()
 
     try:
-        result = await transport.generate(payload)
+        result = await transport.chat(payload)
     finally:
         await transport.aclose()
 
@@ -94,7 +104,7 @@ async def test_generate_uses_exact_endpoint_and_payload() -> None:
 
     assert request.method == "POST"
     assert str(request.url) == (
-        "http://127.0.0.1:11434/api/generate"
+        "http://127.0.0.1:11434/api/chat"
     )
     assert request.headers["content-type"] == (
         "application/json"
@@ -105,7 +115,10 @@ async def test_generate_uses_exact_endpoint_and_payload() -> None:
 
     assert result == {
         "model": "gemma3:12b",
-        "response": "Generated response.",
+        "message": {
+            "role": "assistant",
+            "content": "Generated response.",
+        },
         "done": True,
         "total_duration": 123,
     }
@@ -166,7 +179,7 @@ async def test_generate_uses_exact_endpoint_and_payload() -> None:
     ],
 )
 @pytest.mark.anyio
-async def test_generate_translates_expected_httpx2_errors(
+async def test_chat_translates_expected_httpx2_errors(
     exception_type: type[httpx2.HTTPError],
     expected_code: OllamaTransportErrorCode,
 ) -> None:
@@ -192,7 +205,9 @@ async def test_generate_translates_expected_httpx2_errors(
         with pytest.raises(
             OllamaTransportError
         ) as exc_info:
-            await transport.generate(make_payload())
+            await transport.chat(
+                make_payload()
+            )
     finally:
         await transport.aclose()
 
@@ -232,7 +247,7 @@ async def test_generate_translates_expected_httpx2_errors(
     ],
 )
 @pytest.mark.anyio
-async def test_generate_rejects_non_success_status(
+async def test_chat_rejects_non_success_status(
     status_code: int,
 ) -> None:
     calls = 0
@@ -255,7 +270,9 @@ async def test_generate_rejects_non_success_status(
         with pytest.raises(
             OllamaTransportError
         ) as exc_info:
-            await transport.generate(make_payload())
+            await transport.chat(
+                make_payload()
+            )
     finally:
         await transport.aclose()
 
@@ -303,7 +320,7 @@ async def test_generate_rejects_non_success_status(
     ],
 )
 @pytest.mark.anyio
-async def test_generate_rejects_invalid_json(
+async def test_chat_rejects_invalid_json(
     content: bytes,
     content_type: str,
 ) -> None:
@@ -325,7 +342,9 @@ async def test_generate_rejects_invalid_json(
         with pytest.raises(
             OllamaTransportError
         ) as exc_info:
-            await transport.generate(make_payload())
+            await transport.chat(
+                make_payload()
+            )
     finally:
         await transport.aclose()
 
@@ -348,7 +367,7 @@ async def test_generate_rejects_invalid_json(
 
 
 @pytest.mark.anyio
-async def test_generate_returns_any_valid_json_value() -> None:
+async def test_chat_returns_any_valid_json_value() -> None:
     def handler(
         request: httpx2.Request,
     ) -> httpx2.Response:
@@ -364,7 +383,7 @@ async def test_generate_returns_any_valid_json_value() -> None:
     transport = Httpx2OllamaTransport(client)
 
     try:
-        result = await transport.generate(
+        result = await transport.chat(
             make_payload()
         )
     finally:
@@ -394,7 +413,9 @@ async def test_unexpected_error_is_not_masked() -> None:
         with pytest.raises(
             RuntimeError
         ) as exc_info:
-            await transport.generate(make_payload())
+            await transport.chat(
+                make_payload()
+            )
     finally:
         await transport.aclose()
 

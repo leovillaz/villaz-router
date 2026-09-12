@@ -68,8 +68,9 @@ def make_runtime_context(root: Path) -> RuntimeContext:
         ),
     )
 
+
 class FakeOllamaTransport:
-    async def generate(
+    async def chat(
         self,
         payload: dict[str, object],
     ) -> dict[str, object]:
@@ -85,6 +86,7 @@ def make_ollama_executor() -> OllamaExecutor:
     return OllamaExecutor(
         FakeOllamaTransport()
     )
+
 
 def make_app() -> FastAPI:
     app = FastAPI()
@@ -260,6 +262,7 @@ def test_readiness_returns_ready_with_valid_state(
         "status": "ready",
     }
 
+
 def test_readiness_returns_not_ready_without_runtime_context() -> None:
     app = make_app()
     app.state.ollama_executor = (
@@ -357,6 +360,7 @@ def test_readiness_returns_not_ready_with_invalid_ollama_executor(
     assert response.json() == {
         "status": "not_ready",
     }
+
 
 @pytest.mark.parametrize(
     "path",
@@ -583,8 +587,11 @@ def test_prompt_pipeline_preserves_object_identity_and_message(
     assert captured["decision"] is decision
     assert captured["registry"] is runtime_context.profile_registry
     assert len(executor.requests) == 1
+
     execution_request = executor.requests[0]
+
     assert execution_request.dispatch_plan is dispatch_plan
+    assert execution_request.history == ()
     assert execution_request.user_prompt == "  Original message.  "
 
 
@@ -644,7 +651,9 @@ def test_prompt_success_returns_exact_public_response(
             "tokens_per_second": 28.0,
         },
     }
+
     serialized = response.text
+
     assert "SENSITIVE_SYSTEM_PROMPT" not in serialized
     assert dispatch_plan.registry_hash not in serialized
     assert "comparison_score" not in serialized
@@ -908,6 +917,7 @@ def test_http_status_error_never_replicates_upstream_status(
         )
     )
     app = make_prompt_app(runtime_context, executor)
+
     monkeypatch.setattr(
         routes_module,
         "route_prompt_request",
@@ -1023,6 +1033,7 @@ async def test_prompt_cancellation_propagates(
     decision = make_route_decision()
     cancellation = asyncio.CancelledError()
     executor = RecordingOllamaExecutor(error=cancellation)
+
     monkeypatch.setattr(
         routes_module,
         "route_prompt_request",
