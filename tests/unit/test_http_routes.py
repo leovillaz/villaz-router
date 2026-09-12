@@ -595,6 +595,91 @@ def test_prompt_pipeline_preserves_object_identity_and_message(
     assert execution_request.user_prompt == "  Original message.  "
 
 
+def test_prompt_pipeline_converts_history_for_execution_only(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runtime_context = make_prompt_runtime_context(tmp_path)
+    decision = make_route_decision()
+    dispatch_plan = make_dispatch_plan()
+    executor = RecordingOllamaExecutor()
+    app = make_prompt_app(runtime_context, executor)
+    captured: dict[str, object] = {}
+
+    def fake_route_prompt_request(
+        prompt_request: PromptRequest,
+        received_context: RuntimeContext,
+    ) -> RouteDecision:
+        captured["prompt_request"] = prompt_request
+        return decision
+
+    def fake_build_dispatch_plan(
+        received_decision: RouteDecision,
+        registry: ProfileRegistrySnapshot,
+    ) -> DispatchPlan:
+        return dispatch_plan
+
+    monkeypatch.setattr(
+        routes_module,
+        "route_prompt_request",
+        fake_route_prompt_request,
+    )
+    monkeypatch.setattr(
+        routes_module,
+        "build_dispatch_plan",
+        fake_build_dispatch_plan,
+    )
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/prompt",
+            json={
+                "message": "  Current message.  ",
+                "history": [
+                    {
+                        "user": "  First user.  ",
+                        "assistant": "  First assistant.  ",
+                    },
+                    {
+                        "user": "Second user.",
+                        "assistant": "Second assistant.",
+                    },
+                ],
+            },
+        )
+
+    assert response.status_code == 200
+
+    prompt_request = captured["prompt_request"]
+    assert isinstance(prompt_request, PromptRequest)
+    assert type(prompt_request.history) is tuple
+    assert [
+        (turn.user, turn.assistant)
+        for turn in prompt_request.history
+    ] == [
+        ("  First user.  ", "  First assistant.  "),
+        ("Second user.", "Second assistant."),
+    ]
+
+    assert len(executor.requests) == 1
+    execution_request = executor.requests[0]
+
+    assert execution_request.dispatch_plan is dispatch_plan
+    assert execution_request.user_prompt == "  Current message.  "
+    assert [
+        (turn.user, turn.assistant)
+        for turn in execution_request.history
+    ] == [
+        ("  First user.  ", "  First assistant.  "),
+        ("Second user.", "Second assistant."),
+    ]
+
+    assert all(
+        turn.__class__.__name__ == "OllamaExecutionTurn"
+        for turn in execution_request.history
+    )
+
+
 @pytest.mark.parametrize(
     ("state", "expected_route_id"),
     [
@@ -1059,6 +1144,34 @@ async def test_prompt_cancellation_propagates(
         {
             "message": "message",
             "explicit_profile": "a" * 129,
+        },
+        {
+            "message": "message",
+            "history": [
+                {
+                    "user": "",
+                    "assistant": "response",
+                },
+            ],
+        },
+        {
+            "message": "message",
+            "history": [
+                {
+                    "user": "question",
+                    "assistant": " ",
+                },
+            ],
+        },
+        {
+            "message": "message",
+            "history": [
+                {
+                    "user": "question",
+                    "assistant": "response",
+                    "role": "assistant",
+                },
+            ],
         },
     ],
 )

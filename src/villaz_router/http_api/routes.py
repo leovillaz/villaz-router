@@ -33,6 +33,7 @@ from villaz_router.ollama_execution.executor import (
 )
 from villaz_router.ollama_execution.models import (
     OllamaExecutionRequest,
+    OllamaExecutionTurn,
 )
 from villaz_router.registry_errors import RegistryError
 
@@ -198,6 +199,13 @@ async def post_prompt(
         )
         execution_request = OllamaExecutionRequest(
             dispatch_plan=dispatch_plan,
+            history=tuple(
+                OllamaExecutionTurn(
+                    user=turn.user,
+                    assistant=turn.assistant,
+                )
+                for turn in prompt_request.history
+            ),
             user_prompt=prompt_request.message,
         )
         execution_result = await ollama_executor.execute(

@@ -401,6 +401,47 @@ def test_high_content_length_does_not_reject_valid_body() -> None:
     assert response_status(sent) == 204
 
 
+def test_prompt_history_cannot_bypass_request_body_limit() -> None:
+    endpoint_calls = 0
+    application = FastAPI()
+    application.add_middleware(
+        RequestBodyLimitMiddleware
+    )
+
+    @application.post("/prompt")
+    def prompt(request: PromptRequest) -> dict[str, bool]:
+        nonlocal endpoint_calls
+        endpoint_calls += 1
+        return {"accepted": True}
+
+    raw_body = json.dumps(
+        {
+            "message": "message",
+            "history": [
+                {
+                    "user": "u",
+                    "assistant": "a" * MAX_REQUEST_BODY_BYTES,
+                },
+            ],
+        },
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+    assert len(raw_body) > MAX_REQUEST_BODY_BYTES
+
+    with TestClient(application) as client:
+        response = client.post(
+            "/prompt",
+            content=raw_body,
+            headers={
+                "content-type": "application/json",
+            },
+        )
+
+    assert response.status_code == 413
+    assert endpoint_calls == 0
+
+
 def test_prompt_message_over_character_limit_remains_422() -> None:
     endpoint_calls = 0
     application = FastAPI()

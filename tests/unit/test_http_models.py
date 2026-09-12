@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from villaz_router.http_api.models import (
     LivenessResponse,
+    PromptHistoryTurn,
     PromptMetrics,
     PromptRequest,
     PromptResponse,
@@ -164,6 +165,7 @@ def test_health_response_rejects_invalid_status(
 def test_prompt_request_has_exact_contract() -> None:
     assert set(PromptRequest.model_fields) == {
         "message",
+        "history",
         "explicit_profile",
     }
     assert PromptRequest.model_config["extra"] == "forbid"
@@ -320,6 +322,138 @@ def test_prompt_request_is_frozen() -> None:
 
     with pytest.raises(ValidationError):
         request.message = "alterada"
+
+
+def test_prompt_history_turn_has_exact_contract() -> None:
+    assert set(PromptHistoryTurn.model_fields) == {
+        "user",
+        "assistant",
+    }
+    assert PromptHistoryTurn.model_config["extra"] == "forbid"
+    assert PromptHistoryTurn.model_config["frozen"] is True
+    assert PromptHistoryTurn.model_config["strict"] is True
+    assert (
+        PromptHistoryTurn.model_config[
+            "str_strip_whitespace"
+        ]
+        is False
+    )
+
+
+def test_prompt_history_turn_preserves_exact_input() -> None:
+    turn = PromptHistoryTurn(
+        user="  User text  ",
+        assistant="  Assistant text  ",
+    )
+
+    assert turn.user == "  User text  "
+    assert turn.assistant == "  Assistant text  "
+
+
+@pytest.mark.parametrize(
+    ("field_name", "invalid_value"),
+    [
+        ("user", ""),
+        ("user", " "),
+        ("user", "\t\n"),
+        ("assistant", ""),
+        ("assistant", " "),
+        ("assistant", "\t\n"),
+    ],
+)
+def test_prompt_history_turn_rejects_empty_or_whitespace_text(
+    field_name: str,
+    invalid_value: str,
+) -> None:
+    values: dict[str, object] = {
+        "user": "user",
+        "assistant": "assistant",
+    }
+    values[field_name] = invalid_value
+
+    with pytest.raises(ValidationError):
+        PromptHistoryTurn.model_validate(values)
+
+
+@pytest.mark.parametrize(
+    ("field_name", "invalid_value"),
+    [
+        ("user", 1),
+        ("user", True),
+        ("user", None),
+        ("assistant", 1),
+        ("assistant", True),
+        ("assistant", None),
+    ],
+)
+def test_prompt_history_turn_requires_strict_strings(
+    field_name: str,
+    invalid_value: object,
+) -> None:
+    values: dict[str, object] = {
+        "user": "user",
+        "assistant": "assistant",
+    }
+    values[field_name] = invalid_value
+
+    with pytest.raises(ValidationError):
+        PromptHistoryTurn.model_validate(values)
+
+
+def test_prompt_history_turn_forbids_extra_fields() -> None:
+    with pytest.raises(ValidationError):
+        PromptHistoryTurn.model_validate({
+            "user": "user",
+            "assistant": "assistant",
+            "role": "system",
+        })
+
+
+def test_prompt_request_defaults_history_to_empty_tuple() -> None:
+    request = PromptRequest(
+        message="Mensagem válida",
+    )
+
+    assert request.history == ()
+    assert type(request.history) is tuple
+
+
+def test_prompt_request_accepts_json_history_array_as_tuple() -> None:
+    request = PromptRequest.model_validate({
+        "message": "Mensagem atual",
+        "history": [
+            {
+                "user": "Pergunta 1",
+                "assistant": "Resposta 1",
+            },
+            {
+                "user": "Pergunta 2",
+                "assistant": "Resposta 2",
+            },
+        ],
+    })
+
+    assert type(request.history) is tuple
+    assert [
+        (turn.user, turn.assistant)
+        for turn in request.history
+    ] == [
+        ("Pergunta 1", "Resposta 1"),
+        ("Pergunta 2", "Resposta 2"),
+    ]
+
+
+def test_prompt_request_rejects_invalid_history_item() -> None:
+    with pytest.raises(ValidationError):
+        PromptRequest.model_validate({
+            "message": "Mensagem atual",
+            "history": [
+                {
+                    "user": "Pergunta",
+                    "assistant": " ",
+                },
+            ],
+        })
 
 
 def make_prompt_metrics() -> PromptMetrics:

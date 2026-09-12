@@ -89,6 +89,34 @@ class PromptMetrics(BaseModel):
 
         return value
 
+class PromptHistoryTurn(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        strict=True,
+        str_strip_whitespace=False,
+    )
+
+    user: StrictStr
+    assistant: StrictStr
+
+    @field_validator(
+        "user",
+        "assistant",
+    )
+    @classmethod
+    def validate_required_text(
+        cls,
+        value: str,
+    ) -> str:
+        if value.strip() == "":
+            raise ValueError(
+                "history turn text must not be empty "
+                "or whitespace-only"
+            )
+        return value
+
+
 class PromptRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -101,11 +129,25 @@ class PromptRequest(BaseModel):
         min_length=1,
         max_length=16_384,
     )
+    history: tuple[PromptHistoryTurn, ...] = ()
     explicit_profile: StrictStr | None = Field(
         default=None,
         min_length=1,
         max_length=128,
     )
+
+    @field_validator(
+        "history",
+        mode="before",
+    )
+    @classmethod
+    def normalize_history(
+        cls,
+        value: object,
+    ) -> object:
+        if isinstance(value, list):
+            return tuple(value)
+        return value
 
     @field_validator("message")
     @classmethod

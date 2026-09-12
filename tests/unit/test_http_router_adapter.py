@@ -6,7 +6,10 @@ import pytest
 from villaz_router.bootstrap_models import RuntimeContext
 from villaz_router.errors import RouterError, RouterErrorCode
 from villaz_router.http_api import router_adapter
-from villaz_router.http_api.models import PromptRequest
+from villaz_router.http_api.models import (
+    PromptHistoryTurn,
+    PromptRequest,
+)
 from villaz_router.http_api.router_adapter import (
     HttpRoutingError,
     route_prompt_request,
@@ -109,6 +112,33 @@ def test_explicit_profile_is_copied_exactly(
     route_request = captured["route_request"]
     assert isinstance(route_request, RouteRequest)
     assert route_request.explicit_profile == prompt_request.explicit_profile
+
+
+def test_history_never_enters_route_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    decision = _dispatchable_decision(RouteState.ROUTED)
+    captured = _capture_request(monkeypatch, decision)
+    prompt_request = PromptRequest(
+        message="current message",
+        history=(
+            PromptHistoryTurn(
+                user="previous user",
+                assistant="previous assistant",
+            ),
+        ),
+    )
+
+    route_prompt_request(
+        prompt_request,
+        _runtime_context(),
+    )
+
+    route_request = captured["route_request"]
+
+    assert isinstance(route_request, RouteRequest)
+    assert route_request.message == "current message"
+    assert not hasattr(route_request, "history")
 
 
 def test_runtime_ruleset_is_passed_by_identity(
