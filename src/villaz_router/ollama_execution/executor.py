@@ -1,3 +1,5 @@
+import re
+
 from collections.abc import Mapping
 from types import TracebackType
 from typing import NoReturn
@@ -18,6 +20,22 @@ from villaz_router.ollama_execution.models import (
 from villaz_router.ollama_execution.transport import (
     OllamaTransport,
 )
+
+
+_CONTEXT_OVERFLOW_PATTERN = re.compile(
+    r"request \([0-9]+ tokens\) "
+    r"exceeds the available context size "
+    r"\([0-9]+ tokens\), try increasing it"
+)
+
+
+def _is_context_overflow_message(
+    message: str,
+) -> bool:
+    return (
+        _CONTEXT_OVERFLOW_PATTERN.fullmatch(message)
+        is not None
+    )
 
 
 _TRANSPORT_ERROR_MAPPING: dict[
@@ -74,6 +92,27 @@ _TRANSPORT_ERROR_MAPPING: dict[
 def _raise_transport_error(
     error: OllamaTransportError,
 ) -> NoReturn:
+    if (
+        error.code
+        is OllamaTransportErrorCode.HTTP_STATUS_ERROR
+        and error.provider_error_message is not None
+        and _is_context_overflow_message(
+            error.provider_error_message
+        )
+    ):
+        raise OllamaExecutionError(
+            code=(
+                OllamaExecutionErrorCode
+                .CONTEXT_OVERFLOW
+            ),
+            stage=OllamaExecutionStage.HTTP_RESPONSE,
+            message=(
+                "ollama request exceeds the "
+                "available context"
+            ),
+            status_code=error.status_code,
+        ) from None
+
     code, stage, message = _TRANSPORT_ERROR_MAPPING[
         error.code
     ]
@@ -147,6 +186,8 @@ class OllamaExecutor:
             "messages": messages,
             "stream": False,
             "think": False,
+            "truncate": False,
+            "shift": False,
         }
 
         try:

@@ -33,6 +33,8 @@ EXPECTED_PAYLOAD_KEYS = {
     "messages",
     "stream",
     "think",
+    "truncate",
+    "shift",
 }
 
 FAKE_RESPONSE_TEXT = "resposta sintética do transporte falso"
@@ -98,7 +100,15 @@ class InspectingFakeOllamaTransport:
             raise AssertionError(
                 "think must be exactly false"
             )
+        if payload["truncate"] is not False:
+            raise AssertionError(
+                "truncate must be exactly false"
+            )
 
+        if payload["shift"] is not False:
+            raise AssertionError(
+                "shift must be exactly false"
+            )
         self.payload_validated = True
 
         return {

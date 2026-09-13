@@ -8,19 +8,111 @@ from villaz_router.ollama_execution.errors import (
     OllamaTransportErrorCode,
 )
 
+_MAX_PROVIDER_ERROR_MESSAGE_CHARS = 1024
 
 def _raise_transport_error(
     code: OllamaTransportErrorCode,
     message: str,
-    cause: BaseException,
+    cause: BaseException | None = None,
     status_code: int | None = None,
+    provider_error_message: str | None = None,
 ) -> NoReturn:
-    raise OllamaTransportError(
+    error = OllamaTransportError(
         code=code,
         message=message,
         status_code=status_code,
+        provider_error_message=provider_error_message,
         cause=cause,
-    ) from cause
+    )
+
+    if cause is None:
+        raise error from None
+
+    raise error from cause
+
+
+def _extract_nested_provider_error_message(
+    message: str,
+) -> tuple[bool, str | None]:
+    try:
+        nested_body = json.loads(message)
+    except (
+        json.JSONDecodeError,
+        UnicodeDecodeError,
+    ):
+        return False, None
+
+    if not isinstance(nested_body, dict):
+        return True, None
+
+    if set(nested_body) != {"error"}:
+        return True, None
+
+    nested_error = nested_body.get("error")
+
+    if not isinstance(nested_error, dict):
+        return True, None
+
+    value = nested_error.get("message")
+
+    if not isinstance(value, str):
+        return True, None
+
+    nested_message = value.strip()
+
+    if nested_message == "":
+        return True, None
+
+    if (
+        len(nested_message)
+        > _MAX_PROVIDER_ERROR_MESSAGE_CHARS
+    ):
+        return True, None
+
+    return True, nested_message
+
+
+def _extract_provider_error_message(
+    response: httpx2.Response,
+) -> str | None:
+    try:
+        body = response.json()
+    except (
+        json.JSONDecodeError,
+        UnicodeDecodeError,
+        httpx2.DecodingError,
+    ):
+        return None
+
+    if not isinstance(body, dict):
+        return None
+
+    if set(body) != {"error"}:
+        return None
+
+    value = body.get("error")
+
+    if not isinstance(value, str):
+        return None
+
+    message = value.strip()
+
+    if message == "":
+        return None
+
+    if len(message) > _MAX_PROVIDER_ERROR_MESSAGE_CHARS:
+        return None
+
+    is_nested_json, nested_message = (
+        _extract_nested_provider_error_message(
+            message
+        )
+    )
+
+    if is_nested_json:
+        return nested_message
+
+    return message
 
 
 class Httpx2OllamaTransport:
@@ -88,15 +180,17 @@ class Httpx2OllamaTransport:
                 exc,
             )
 
-        try:
-            response.raise_for_status()
-        except httpx2.HTTPStatusError as exc:
+        if not 200 <= response.status_code < 300:
             _raise_transport_error(
                 OllamaTransportErrorCode
                 .HTTP_STATUS_ERROR,
                 "ollama returned a non-success status",
-                exc,
                 status_code=response.status_code,
+                provider_error_message=(
+                    _extract_provider_error_message(
+                        response
+                    )
+                ),
             )
 
         try:

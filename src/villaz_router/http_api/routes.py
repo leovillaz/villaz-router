@@ -83,6 +83,11 @@ _OLLAMA_ERROR_MAPPING: dict[
         "MODEL_SERVICE_ERROR",
         "The model service failed to complete the request.",
     ),
+    OllamaExecutionErrorCode.CONTEXT_OVERFLOW: (
+        422,
+        "CONTEXT_OVERFLOW",
+        "The request exceeds the available model context.",
+    ),
     OllamaExecutionErrorCode.INVALID_JSON_RESPONSE: (
         502,
         "MODEL_SERVICE_ERROR",

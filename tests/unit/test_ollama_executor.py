@@ -160,6 +160,8 @@ async def test_execute_sends_exact_payload() -> None:
         ],
         "stream": False,
         "think": False,
+        "truncate": False,
+        "shift": False,
     }]
     assert result == OllamaExecutionResult(
         model="gemma3:12b",
@@ -220,6 +222,8 @@ async def test_execute_sends_history_in_exact_order() -> None:
         ],
         "stream": False,
         "think": False,
+        "truncate": False,
+        "shift": False,
     }]
 
 
@@ -409,6 +413,8 @@ async def test_execute_translates_transport_errors(
         ],
         "stream": False,
         "think": False,
+        "truncate": False,
+        "shift": False,
     }]
 
     serialized = str(error) + repr(error)
@@ -421,6 +427,170 @@ async def test_execute_translates_transport_errors(
         "technical transport failure"
         not in serialized
     )
+
+
+@pytest.mark.parametrize(
+    "status_code",
+    [
+        400,
+        500,
+    ],
+)
+@pytest.mark.anyio
+async def test_execute_classifies_known_context_overflow(
+    status_code: int,
+) -> None:
+    provider_message = (
+        "request (300 tokens) exceeds the available "
+        "context size (256 tokens), try increasing it"
+    )
+    transport_error = OllamaTransportError(
+        code=OllamaTransportErrorCode.HTTP_STATUS_ERROR,
+        message="ollama returned a non-success status",
+        status_code=status_code,
+        provider_error_message=provider_message,
+    )
+    transport = FakeTransport(
+        error=transport_error
+    )
+    executor = OllamaExecutor(transport)
+
+    with pytest.raises(
+        OllamaExecutionError
+    ) as exc_info:
+        await executor.execute(make_request())
+
+    error = exc_info.value
+
+    assert error.code is (
+        OllamaExecutionErrorCode.CONTEXT_OVERFLOW
+    )
+    assert error.stage is (
+        OllamaExecutionStage.HTTP_RESPONSE
+    )
+    assert error.message == (
+        "ollama request exceeds the available context"
+    )
+    assert error.status_code == status_code
+    assert error.cause is None
+    assert error.__cause__ is None
+
+    serialized = str(error) + repr(error)
+
+    assert provider_message not in serialized
+    assert len(transport.payloads) == 1
+
+
+@pytest.mark.parametrize(
+    "provider_message",
+    [
+        "context",
+        "exceeds",
+        "context length exceeded",
+        (
+            "request (300 tokens) exceeds the "
+            "available context size "
+            "(256 tokens)"
+        ),
+        (
+            "request exceeds the available "
+            "context size"
+        ),
+        (
+            "request (300 tokens) exceeds the "
+            "available context length "
+            "(256 tokens)"
+        ),
+        (
+            "prompt (300 tokens) exceeds the "
+            "available context size "
+            "(256 tokens)"
+        ),
+        (
+            "request (300 tokens) exceeds the "
+            "maximum context size "
+            "(256 tokens)"
+        ),
+        (
+            "request (300 tokens) exceeds the "
+            "available context size "
+            "(256 tokens) extra"
+        ),
+        (
+            "Request (300 tokens) exceeds the "
+            "available context size "
+            "(256 tokens)"
+        ),
+        "invalid context option",
+        "context parameter is malformed",
+        "unable to load model context",
+    ],
+)
+@pytest.mark.anyio
+async def test_execute_does_not_guess_context_overflow(
+    provider_message: str,
+) -> None:
+    transport_error = OllamaTransportError(
+        code=OllamaTransportErrorCode.HTTP_STATUS_ERROR,
+        message="ollama returned a non-success status",
+        status_code=400,
+        provider_error_message=provider_message,
+    )
+    transport = FakeTransport(
+        error=transport_error
+    )
+    executor = OllamaExecutor(transport)
+
+    with pytest.raises(
+        OllamaExecutionError
+    ) as exc_info:
+        await executor.execute(make_request())
+
+    error = exc_info.value
+
+    assert error.code is (
+        OllamaExecutionErrorCode.HTTP_STATUS_ERROR
+    )
+    assert error.stage is (
+        OllamaExecutionStage.HTTP_RESPONSE
+    )
+    assert error.message == (
+        "ollama returned a non-success status"
+    )
+    assert error.status_code == 400
+    assert error.cause is transport_error
+    assert error.__cause__ is transport_error
+
+
+@pytest.mark.anyio
+async def test_execute_http_status_without_provider_evidence_is_generic(
+) -> None:
+    transport_error = OllamaTransportError(
+        code=OllamaTransportErrorCode.HTTP_STATUS_ERROR,
+        message="ollama returned a non-success status",
+        status_code=400,
+        provider_error_message=None,
+    )
+    transport = FakeTransport(
+        error=transport_error
+    )
+    executor = OllamaExecutor(transport)
+
+    with pytest.raises(
+        OllamaExecutionError
+    ) as exc_info:
+        await executor.execute(make_request())
+
+    error = exc_info.value
+
+    assert error.code is (
+        OllamaExecutionErrorCode.HTTP_STATUS_ERROR
+    )
+    assert error.stage is (
+        OllamaExecutionStage.HTTP_RESPONSE
+    )
+    assert error.status_code == 400
+    assert error.cause is transport_error
 
 
 @pytest.mark.anyio

@@ -41,6 +41,7 @@ def test_execution_error_code_has_exact_values() -> None:
         "NETWORK_ERROR",
         "PROTOCOL_ERROR",
         "HTTP_STATUS_ERROR",
+        "CONTEXT_OVERFLOW",
         "INVALID_JSON_RESPONSE",
         "INVALID_RESPONSE",
         "MODEL_MISMATCH",
@@ -116,12 +117,35 @@ def test_transport_error_preserves_exact_attributes() -> None:
         "ollama response timed out"
     )
     assert error.status_code is None
+    assert error.provider_error_message is None
     assert error.cause is cause
     assert error.args == (
         "ollama response timed out",
     )
     assert str(error) == (
         "READ_TIMEOUT: ollama response timed out"
+    )
+
+
+def test_transport_error_preserves_provider_error_message() -> None:
+    error = OllamaTransportError(
+        code=OllamaTransportErrorCode.HTTP_STATUS_ERROR,
+        message="ollama returned a non-success status",
+        status_code=400,
+        provider_error_message=(
+            "SENSITIVE_PROVIDER_ERROR_MESSAGE"
+        ),
+    )
+
+    assert error.provider_error_message == (
+        "SENSITIVE_PROVIDER_ERROR_MESSAGE"
+    )
+
+    serialized = str(error) + repr(error)
+
+    assert (
+        "SENSITIVE_PROVIDER_ERROR_MESSAGE"
+        not in serialized
     )
 
 

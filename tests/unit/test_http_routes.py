@@ -933,6 +933,12 @@ def test_unexpected_registry_error_returns_safe_internal_error(
             )
         ],
         (
+            OllamaExecutionErrorCode.CONTEXT_OVERFLOW,
+            422,
+            "CONTEXT_OVERFLOW",
+            "The request exceeds the available model context.",
+        ),
+        (
             OllamaExecutionErrorCode.INVALID_EXECUTION_RESULT,
             500,
             "INTERNAL_ERROR",

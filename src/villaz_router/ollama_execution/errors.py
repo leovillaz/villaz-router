@@ -16,6 +16,7 @@ class OllamaExecutionErrorCode(StrEnum):
     NETWORK_ERROR = "NETWORK_ERROR"
     PROTOCOL_ERROR = "PROTOCOL_ERROR"
     HTTP_STATUS_ERROR = "HTTP_STATUS_ERROR"
+    CONTEXT_OVERFLOW = "CONTEXT_OVERFLOW"
     INVALID_JSON_RESPONSE = "INVALID_JSON_RESPONSE"
     INVALID_RESPONSE = "INVALID_RESPONSE"
     MODEL_MISMATCH = "MODEL_MISMATCH"
@@ -61,12 +62,14 @@ class OllamaTransportError(Exception):
         code: OllamaTransportErrorCode,
         message: str,
         status_code: int | None = None,
+        provider_error_message: str | None = None,
         cause: BaseException | None = None,
     ) -> None:
         super().__init__(message)
         self.code = code
         self.message = message
         self.status_code = status_code
+        self.provider_error_message = provider_error_message
         self.cause = cause
 
     def __str__(self) -> str:

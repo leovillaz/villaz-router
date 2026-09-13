@@ -284,11 +284,9 @@ async def test_chat_rejects_non_success_status(
         .HTTP_STATUS_ERROR
     )
     assert error.status_code == status_code
-    assert isinstance(
-        error.cause,
-        httpx2.HTTPStatusError,
-    )
-    assert error.__cause__ is error.cause
+    assert error.provider_error_message is None
+    assert error.cause is None
+    assert error.__cause__ is None
 
     serialized = str(error) + repr(error)
 
@@ -300,6 +298,309 @@ async def test_chat_rejects_non_success_status(
         "SENSITIVE_USER_PROMPT"
         not in serialized
     )
+
+
+@pytest.mark.parametrize(
+    "status_code",
+    [
+        400,
+        500,
+    ],
+)
+@pytest.mark.anyio
+async def test_chat_preserves_valid_provider_error_message(
+    status_code: int,
+) -> None:
+    provider_message = (
+        "request (300 tokens) exceeds the available "
+        "context size (256 tokens)"
+    )
+
+    def handler(
+        request: httpx2.Request,
+    ) -> httpx2.Response:
+        return httpx2.Response(
+            status_code,
+            json={
+                "error": provider_message,
+            },
+        )
+
+    client = make_client(handler)
+    transport = Httpx2OllamaTransport(client)
+
+    try:
+        with pytest.raises(
+            OllamaTransportError
+        ) as exc_info:
+            await transport.chat(
+                make_payload()
+            )
+    finally:
+        await transport.aclose()
+
+    error = exc_info.value
+
+    assert error.code is (
+        OllamaTransportErrorCode.HTTP_STATUS_ERROR
+    )
+    assert error.status_code == status_code
+    assert error.provider_error_message == (
+        provider_message
+    )
+    assert error.cause is None
+    assert error.__cause__ is None
+
+    serialized = str(error) + repr(error)
+
+    assert provider_message not in serialized
+    assert "SENSITIVE_SYSTEM_PROMPT" not in serialized
+    assert "SENSITIVE_USER_PROMPT" not in serialized
+
+
+@pytest.mark.anyio
+async def test_chat_extracts_nested_ollama_context_error_message(
+) -> None:
+    provider_message = (
+        "request (200030 tokens) exceeds the available "
+        "context size (4096 tokens), try increasing it"
+    )
+    nested_provider_body = {
+        "error": {
+            "code": 400,
+            "message": provider_message,
+            "type": "exceed_context_size_error",
+            "n_prompt_tokens": 200030,
+            "n_ctx": 4096,
+        }
+    }
+
+    def handler(
+        request: httpx2.Request,
+    ) -> httpx2.Response:
+        return httpx2.Response(
+            400,
+            json={
+                "error": json.dumps(
+                    nested_provider_body,
+                    separators=(",", ":"),
+                ),
+            },
+        )
+
+    client = make_client(handler)
+    transport = Httpx2OllamaTransport(client)
+
+    try:
+        with pytest.raises(
+            OllamaTransportError
+        ) as exc_info:
+            await transport.chat(
+                make_payload()
+            )
+    finally:
+        await transport.aclose()
+
+    error = exc_info.value
+
+    assert error.code is (
+        OllamaTransportErrorCode.HTTP_STATUS_ERROR
+    )
+    assert error.status_code == 400
+    assert error.provider_error_message == (
+        provider_message
+    )
+    assert error.cause is None
+    assert error.__cause__ is None
+
+    assert (
+        "exceed_context_size_error"
+        not in error.provider_error_message
+    )
+
+    serialized = str(error) + repr(error)
+
+    assert provider_message not in serialized
+    assert "exceed_context_size_error" not in serialized
+    assert "SENSITIVE_SYSTEM_PROMPT" not in serialized
+    assert "SENSITIVE_USER_PROMPT" not in serialized
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {},
+        {
+            "error": 123,
+        },
+        {
+            "error": "",
+        },
+        {
+            "error": "   ",
+        },
+        {
+            "error": "valid",
+            "extra": "unexpected",
+        },
+        [
+            "error",
+        ],
+    ],
+)
+@pytest.mark.anyio
+async def test_chat_discards_invalid_provider_error_evidence(
+    body: object,
+) -> None:
+    def handler(
+        request: httpx2.Request,
+    ) -> httpx2.Response:
+        return httpx2.Response(
+            400,
+            json=body,
+        )
+
+    client = make_client(handler)
+    transport = Httpx2OllamaTransport(client)
+
+    try:
+        with pytest.raises(
+            OllamaTransportError
+        ) as exc_info:
+            await transport.chat(
+                make_payload()
+            )
+    finally:
+        await transport.aclose()
+
+    error = exc_info.value
+
+    assert error.code is (
+        OllamaTransportErrorCode.HTTP_STATUS_ERROR
+    )
+    assert error.status_code == 400
+    assert error.provider_error_message is None
+    assert error.cause is None
+    assert error.__cause__ is None
+
+
+@pytest.mark.parametrize(
+    "nested_value",
+    [
+        "{}",
+        "[]",
+        '"text"',
+        '{"unexpected":"value"}',
+        '{"error":"not-an-object"}',
+        '{"error":{"message":123}}',
+        '{"error":{"message":""}}',
+    ],
+)
+@pytest.mark.anyio
+async def test_chat_discards_unrecognized_nested_json_error(
+    nested_value: str,
+) -> None:
+    def handler(
+        request: httpx2.Request,
+    ) -> httpx2.Response:
+        return httpx2.Response(
+            400,
+            json={
+                "error": nested_value,
+            },
+        )
+
+    client = make_client(handler)
+    transport = Httpx2OllamaTransport(client)
+
+    try:
+        with pytest.raises(
+            OllamaTransportError
+        ) as exc_info:
+            await transport.chat(
+                make_payload()
+            )
+    finally:
+        await transport.aclose()
+
+    error = exc_info.value
+
+    assert error.code is (
+        OllamaTransportErrorCode.HTTP_STATUS_ERROR
+    )
+    assert error.provider_error_message is None
+    assert nested_value not in (
+        str(error) + repr(error)
+    )
+
+
+@pytest.mark.anyio
+async def test_chat_accepts_provider_error_message_at_limit() -> None:
+    provider_message = "x" * 1024
+
+    def handler(
+        request: httpx2.Request,
+    ) -> httpx2.Response:
+        return httpx2.Response(
+            400,
+            json={
+                "error": provider_message,
+            },
+        )
+
+    client = make_client(handler)
+    transport = Httpx2OllamaTransport(client)
+
+    try:
+        with pytest.raises(
+            OllamaTransportError
+        ) as exc_info:
+            await transport.chat(
+                make_payload()
+            )
+    finally:
+        await transport.aclose()
+
+    assert (
+        exc_info.value.provider_error_message
+        == provider_message
+    )
+
+
+@pytest.mark.anyio
+async def test_chat_discards_oversized_provider_error_message() -> None:
+    provider_message = "x" * 1025
+
+    def handler(
+        request: httpx2.Request,
+    ) -> httpx2.Response:
+        return httpx2.Response(
+            400,
+            json={
+                "error": provider_message,
+            },
+        )
+
+    client = make_client(handler)
+    transport = Httpx2OllamaTransport(client)
+
+    try:
+        with pytest.raises(
+            OllamaTransportError
+        ) as exc_info:
+            await transport.chat(
+                make_payload()
+            )
+    finally:
+        await transport.aclose()
+
+    error = exc_info.value
+
+    assert error.provider_error_message is None
+
+    serialized = str(error) + repr(error)
+
+    assert provider_message not in serialized
 
 
 @pytest.mark.parametrize(
